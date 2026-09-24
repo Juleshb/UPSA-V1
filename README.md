@@ -1,32 +1,35 @@
-# RUPSA NEXT
+# RUPSA NEXT Brand
 
-A modern payment and education-services experience connecting private schools,
-parents and regulated financial institutions. This prototype includes a parent
-finance dashboard, school-fee balances, transaction history, responsible
-financing promotion and an interactive payment flow.
+A modern logo system for RUPSA NEXT, a digital financial and education-services platform connecting schools, families, and regulated financial institutions.
 
-## Run locally
+## Logo files
 
-Install dependencies and start the development server:
+Production-ready SVG assets are in `public/`:
+
+- `rupsa-next-logo.svg` — primary horizontal logo
+- `rupsa-next-logo-reversed.svg` — for dark backgrounds
+- `rupsa-next-logo-mono.svg` — single-colour applications
+- `rupsa-next-icon.svg` — app icon and compact brand mark
+
+The symbol combines an abstract **R** with connected forward paths, representing schools, parents and financial partners moving together.
+
+## Brand colours
+
+- RUPSA Midnight: `#092B3C`
+- Forward Aqua: `#18D6B4`
+- Open Sky: `#C7F7ED`
+- Clear White: `#F7FAF9`
+
+## Run the brand preview
 
 ```bash
 npm install
-npm run dev
+npm run dev -- --host 0.0.0.0 --port 4179
 ```
 
-Open the local URL printed by Next.js. To use the project preview port:
+Build and lint:
 
 ```bash
-npm run dev -- --hostname 0.0.0.0 --port 43127
+npm run build
+npm run lint
 ```
-
-## Stack
-
-- Next.js and React
-- TypeScript
-- Tailwind CSS
-- shadcn/ui primitives
-- Lucide icons
-
-The payment actions are demonstrative and use local UI state; no live payment
-processor or customer data is connected.

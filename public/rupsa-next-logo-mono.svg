@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 530 120" role="img" aria-labelledby="title desc">
+  <title id="title">RUPSA NEXT monochrome logo</title>
+  <desc id="desc">Single-colour RUPSA NEXT logo.</desc>
+  <rect width="120" height="120" rx="30" fill="#092B3C"/>
+  <path d="M33 87V31h27c18.5 0 29.5 9.3 29.5 24.2 0 10.5-5.9 18.2-16.2 21.7L91 96H72.8L53.5 74.6V87H33Zm20.5-29.2h7.2c7 0 11-1.4 11-6.4 0-4.8-4-6.2-11-6.2h-7.2v12.6Z" fill="#fff"/>
+  <path d="M66 71.5 91.5 97H74L55 76.7l11-5.2ZM90.8 40.2v17.4h-7.2V47.4H73.4v-7.2h17.4Z" fill="#fff"/>
+  <text x="153" y="69" fill="#092B3C" font-family="Inter, Avenir, Arial, sans-serif" font-size="51" font-weight="800" letter-spacing="-1.8">RUPSA</text>
+  <rect x="339" y="32" width="1.5" height="55" fill="#092B3C"/>
+  <text x="366" y="68" fill="#092B3C" font-family="Inter, Avenir, Arial, sans-serif" font-size="34" font-weight="800" letter-spacing="5.5">NEXT</text>
+</svg>
