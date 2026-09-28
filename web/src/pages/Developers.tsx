@@ -148,8 +148,8 @@ export function Developers() {
   const [baseUrl, setBaseUrl] = useState(() => sessionStorage.getItem(BASE_KEY) ?? 'http://localhost:4000')
   const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY) ?? '')
   const [user, setUser] = useState<SessionUser | null>(() => readStore<SessionUser | null>(USER_KEY, null))
-  const [email, setEmail] = useState(SEEDED_ACCOUNTS[0].email)
-  const [password, setPassword] = useState(SEEDED_ACCOUNTS[0].password)
+  const [email, setEmail] = useState<string>(SEEDED_ACCOUNTS[0].email)
+  const [password, setPassword] = useState<string>(SEEDED_ACCOUNTS[0].password)
   const [health, setHealth] = useState<'checking' | 'up' | 'down'>('checking')
   const [pathValues, setPathValues] = useState<Record<string, string>>({})
   const [queryValues, setQueryValues] = useState<Record<string, string>>({})
@@ -235,7 +235,7 @@ export function Developers() {
     sessionStorage.removeItem(USER_KEY)
   }
 
-  async function login(nextEmail = email, nextPassword = password) {
+  async function login(nextEmail: string = email, nextPassword: string = password) {
     setAuthBusy(true)
     setError('')
     try {
