@@ -1,0 +1,45 @@
+import { Router } from 'express';
+import { authRouter } from './auth.routes';
+import { familyRouter } from './family.routes';
+import { consentsRouter } from './consents.routes';
+import { guaranteesRouter } from './guarantees.routes';
+import { guardiansRouter } from './guardians.routes';
+import { institutionsRouter } from './institutions.routes';
+import { invoicesRouter } from './invoices.routes';
+import { loanApplicationsRouter, loansRouter } from './loans.routes';
+import { notificationsRouter } from './notifications.routes';
+import { paymentsRouter } from './payments.routes';
+import { reconciliationRouter } from './reconciliation.routes';
+import { reportsRouter } from './reports.routes';
+import { membershipRouter } from './membership.routes';
+import { messagesRouter } from './messages.routes';
+import { schoolApplicationsRouter } from './school-applications.routes';
+import { schoolsRouter } from './schools.routes';
+import { settlementsRouter } from './settlements.routes';
+import { studentsRouter } from './students.routes';
+import { webhooksRouter } from './webhooks.routes';
+
+export function v1Router() {
+  const v1 = Router();
+  v1.use('/auth', authRouter);
+  v1.use('/family', familyRouter);
+  v1.use('/school-applications', schoolApplicationsRouter);
+  v1.use('/membership-applications', membershipRouter);
+  v1.use('/messages', messagesRouter);
+  v1.use('/schools', schoolsRouter);
+  v1.use('/guardians', guardiansRouter);
+  v1.use('/students', studentsRouter);
+  v1.use('/institutions', institutionsRouter);
+  v1.use('/invoices', invoicesRouter);
+  v1.use('/payments', paymentsRouter);
+  v1.use('/settlements', settlementsRouter);
+  v1.use('/reconciliation', reconciliationRouter);
+  v1.use('/consents', consentsRouter);
+  v1.use('/loan-applications', loanApplicationsRouter);
+  v1.use('/loans', loansRouter);
+  v1.use('/guarantees', guaranteesRouter);
+  v1.use('/notifications', notificationsRouter);
+  v1.use('/reports', reportsRouter);
+  v1.use('/webhooks', webhooksRouter);
+  return v1;
+}

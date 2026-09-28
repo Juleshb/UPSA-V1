@@ -1,0 +1,950 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  PARENT
+  SCHOOL_USER
+  RUPSA_USER
+  BANK_USER
+  MFI_USER
+  PSP_USER
+  AUDITOR
+  SYSTEM_ADMINISTRATOR
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+model User {
+  id           String     @id @default(cuid())
+  publicId     String     @unique
+  email        String     @unique
+  passwordHash String
+  fullName     String
+  phone        String?
+  role         UserRole
+  status       UserStatus @default(ACTIVE)
+  mfaEnabled   Boolean    @default(false)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  schoolLinks       SchoolUser[]
+  institutionLinks  InstitutionUser[]
+  refreshTokens     RefreshToken[]
+  guardian          Guardian?
+  auditLogs         AuditLog[]
+  accessLogs        AccessLog[]
+  notifications     Notification[]
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Education — schools
+// ---------------------------------------------------------------------------
+
+enum SchoolStatus {
+  APPLICATION
+  SUBMITTED
+  DOCUMENT_REVIEW
+  PENDING_VERIFICATION
+  VERIFICATION
+  APPROVED
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+enum KybStatus {
+  PENDING
+  IN_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum MembershipStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model School {
+  id                      String       @id @default(cuid())
+  publicId                String       @unique
+  rupsaMemberId           String?      @unique
+  schoolName              String
+  registrationNumber      String       @unique
+  taxIdentificationNumber String?
+  phone                   String
+  email                   String
+  province                String
+  district                String
+  sector                  String?
+  status                  SchoolStatus     @default(APPLICATION)
+  kybStatus               KybStatus        @default(PENDING)
+  membershipStatus        MembershipStatus @default(UNVERIFIED)
+  membershipApplicationId String?          @unique
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+  membershipApplication   MembershipApplication? @relation(fields: [membershipApplicationId], references: [id])
+
+  users              SchoolUser[]
+  representatives    SchoolRepresentative[]
+  ownerships         SchoolOwnership[]
+  bankAccounts       SchoolBankAccount[]
+  documents          SchoolDocument[]
+  students           Student[]
+  feeStructures      FeeStructure[]
+  invoices           Invoice[]
+  loanApplications   LoanApplication[]
+  guarantees         Guarantee[]
+  financialProfiles  FinancialProfile[]
+  kycRecords         KycRecord[]
+
+  @@index([status])
+}
+
+model SchoolUser {
+  id       String  @id @default(cuid())
+  schoolId String
+  userId   String
+  title    String?
+  school   School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, userId])
+}
+
+model SchoolRepresentative {
+  id         String  @id @default(cuid())
+  schoolId   String
+  fullName   String
+  title      String
+  phone      String?
+  email      String?
+  authorized Boolean @default(true)
+  school     School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+}
+
+model SchoolOwnership {
+  id           String  @id @default(cuid())
+  schoolId     String
+  ownerName    String
+  ownershipPct Decimal @db.Decimal(5, 2)
+  nationalId   String?
+  school       School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+}
+
+model SchoolBankAccount {
+  id            String  @id @default(cuid())
+  schoolId      String
+  bankName      String
+  accountName   String
+  accountNumber String
+  currency      String  @default("RWF")
+  isPrimary     Boolean @default(false)
+  school        School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+}
+
+model SchoolDocument {
+  id           String   @id @default(cuid())
+  schoolId     String
+  documentType String
+  fileRef      String
+  storedName   String?
+  status       String   @default("SUBMITTED")
+  uploadedAt   DateTime @default(now())
+  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// Education — students & guardians
+// ---------------------------------------------------------------------------
+
+model Guardian {
+  id         String   @id @default(cuid())
+  publicId   String   @unique
+  userId     String?  @unique
+  fullName   String
+  phone      String?
+  email      String?
+  nationalId       String?
+  preferredChannel PaymentChannel?
+  preferredCountry String         @default("RW")
+  notifyChannel    String         @default("IN_APP")
+  createdAt        DateTime       @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User?    @relation(fields: [userId], references: [id])
+  students   StudentGuardian[]
+}
+
+model Student {
+  id                String   @id @default(cuid())
+  publicId          String   @unique
+  schoolId          String
+  studentExternalId String
+  studentName       String
+  academicYear      String
+  classLevel        String
+  feeCategory       String?
+  status            String   @default("ACTIVE")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  school            School   @relation(fields: [schoolId], references: [id])
+  guardians         StudentGuardian[]
+  invoices          Invoice[]
+  financialAccount  StudentFinancialAccount?
+
+  @@unique([schoolId, studentExternalId])
+  @@index([schoolId])
+}
+
+model StudentGuardian {
+  studentId    String
+  guardianId   String
+  relationship String  @default("GUARDIAN")
+  isPrimary    Boolean @default(true)
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  guardian     Guardian @relation(fields: [guardianId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, guardianId])
+}
+
+model StudentFinancialAccount {
+  id          String  @id @default(cuid())
+  studentId   String  @unique
+  currency    String  @default("RWF")
+  totalBilled Decimal @default(0) @db.Decimal(18, 2)
+  totalPaid   Decimal @default(0) @db.Decimal(18, 2)
+  outstanding Decimal @default(0) @db.Decimal(18, 2)
+  student     Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model FeeStructure {
+  id           String  @id @default(cuid())
+  schoolId     String
+  academicYear String
+  classLevel   String
+  feeCategory  String
+  description  String
+  amount       Decimal @db.Decimal(18, 2)
+  currency     String  @default("RWF")
+  term         String?
+  school       School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, academicYear])
+}
+
+// ---------------------------------------------------------------------------
+// Financial — invoices / school ledger
+// ---------------------------------------------------------------------------
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+  WRITTEN_OFF
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  publicId    String        @unique
+  schoolId    String
+  studentId   String
+  currency    String        @default("RWF")
+  amount      Decimal       @db.Decimal(18, 2)
+  amountPaid  Decimal       @default(0) @db.Decimal(18, 2)
+  balance     Decimal       @db.Decimal(18, 2)
+  description String
+  dueDate     DateTime
+  status      InvoiceStatus @default(ISSUED)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  school      School        @relation(fields: [schoolId], references: [id])
+  student     Student       @relation(fields: [studentId], references: [id])
+  lineItems   InvoiceLineItem[]
+  discounts   InvoiceDiscount[]
+  adjustments InvoiceAdjustment[]
+  payments    Payment[]
+  receipts    Receipt[]
+  reconciliations Reconciliation[]
+
+  @@index([schoolId, status])
+  @@index([studentId])
+}
+
+model InvoiceLineItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  description String
+  amount      Decimal @db.Decimal(18, 2)
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model InvoiceDiscount {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  kind        String
+  description String
+  amount      Decimal @db.Decimal(18, 2)
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model InvoiceAdjustment {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  kind        String
+  description String
+  amount      Decimal  @db.Decimal(18, 2)
+  createdAt   DateTime @default(now())
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model Receipt {
+  id          String   @id @default(cuid())
+  publicId    String   @unique
+  invoiceId   String
+  paymentId   String?
+  amount      Decimal  @db.Decimal(18, 2)
+  currency    String   @default("RWF")
+  issuedAt    DateTime @default(now())
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  payment     Payment? @relation(fields: [paymentId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// Financial — payments, settlements, reconciliation
+// ---------------------------------------------------------------------------
+
+enum PaymentChannel {
+  BANK
+  PSP
+  MOBILE_PAYMENT
+  CARD
+  OTHER
+}
+
+enum RailKind {
+  BANK
+  PSP
+  MOBILE_MONEY
+  CARD
+}
+
+enum RailStatus {
+  APPROVED
+  SUSPENDED
+}
+
+enum PaymentInfrastructure {
+  NATIONAL
+  RSWITCH
+  TIPS
+}
+
+enum CorridorStatus {
+  PILOT
+  ACTIVE
+  PLANNED
+}
+
+enum PaymentStatus {
+  PENDING
+  INITIATED
+  SUCCESS
+  FAILED
+  REVERSED
+  REFUNDED
+}
+
+model Payment {
+  id                   String         @id @default(cuid())
+  publicId             String         @unique
+  invoiceId            String
+  amount               Decimal        @db.Decimal(18, 2)
+  currency             String         @default("RWF")
+  paymentChannel       PaymentChannel
+  payerReference       String?
+  status               PaymentStatus  @default(PENDING)
+  settlementReference  String?
+  transactionReference String?
+  idempotencyKey       String?        @unique
+  railId               String?
+  corridorId           String?
+  originCountry        String         @default("RW")
+  destinationCountry   String         @default("RW")
+  flowCode             String         @default("PAY-01")
+  retryCount           Int            @default(0)
+  lastError            String?
+  instructionRef       String?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  invoice              Invoice        @relation(fields: [invoiceId], references: [id])
+  rail                 PaymentRail?   @relation(fields: [railId], references: [id])
+  corridor             EacCorridor?   @relation(fields: [corridorId], references: [id])
+  flowSteps            PaymentFlowStep[]
+  receipts             Receipt[]
+  reconciliations      Reconciliation[]
+  webhookEvents        WebhookEvent[]
+
+  @@index([invoiceId])
+  @@index([status])
+  @@index([railId])
+}
+
+// Approved payment institutions. RUPSA routes instructions; the rail moves funds.
+model PaymentRail {
+  id              String                @id @default(cuid())
+  code            String                @unique
+  name            String
+  kind            RailKind
+  country         String
+  infrastructure  PaymentInfrastructure @default(NATIONAL)
+  institutionName String
+  status          RailStatus            @default(APPROVED)
+  priority        Int                   @default(100)
+  createdAt       DateTime              @default(now())
+  payments        Payment[]
+
+  @@index([country, kind, status])
+}
+
+// EAC cross-border extension. Rwanda (RSwitch) ↔ Tanzania (TIPS) is the pilot.
+model EacCorridor {
+  id                        String                @id @default(cuid())
+  code                      String                @unique
+  originCountry             String
+  destinationCountry        String
+  originInfrastructure      PaymentInfrastructure
+  destinationInfrastructure PaymentInfrastructure
+  originLabel               String
+  destinationLabel          String
+  status                    CorridorStatus
+  payments                  Payment[]
+
+  @@index([status])
+}
+
+model PaymentFlowStep {
+  id        String   @id @default(cuid())
+  paymentId String
+  code      String
+  label     String
+  status    String   @default("RECORDED")
+  detail    String?
+  createdAt DateTime @default(now())
+  payment   Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId, createdAt])
+}
+
+enum SettlementStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model Settlement {
+  id            String           @id @default(cuid())
+  publicId      String           @unique
+  schoolId      String
+  amount        Decimal          @db.Decimal(18, 2)
+  currency      String           @default("RWF")
+  rail          String
+  reference     String           @unique
+  status        SettlementStatus @default(PENDING)
+  settledAt     DateTime?
+  createdAt     DateTime         @default(now())
+  reconciliations Reconciliation[]
+}
+
+enum ReconciliationStatus {
+  MATCHED
+  PARTIALLY_MATCHED
+  UNMATCHED
+  DUPLICATE
+  FAILED
+  PENDING
+  REFUNDED
+  UNDER_REVIEW
+}
+
+model Reconciliation {
+  id            String                @id @default(cuid())
+  publicId      String                @unique
+  invoiceId     String?
+  paymentId     String?
+  settlementId  String?
+  status        ReconciliationStatus  @default(PENDING)
+  notes         String?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  invoice       Invoice?              @relation(fields: [invoiceId], references: [id])
+  payment       Payment?              @relation(fields: [paymentId], references: [id])
+  settlement    Settlement?           @relation(fields: [settlementId], references: [id])
+}
+
+model WebhookEvent {
+  id                   String   @id @default(cuid())
+  eventId              String   @unique
+  event                String
+  paymentId            String?
+  invoiceId            String?
+  amount               Decimal? @db.Decimal(18, 2)
+  currency             String?
+  transactionReference String?
+  payload              Json
+  processedAt          DateTime @default(now())
+  payment              Payment? @relation(fields: [paymentId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// Institutions (banks / MFIs / PSPs)
+// ---------------------------------------------------------------------------
+
+enum InstitutionType {
+  BANK
+  MFI
+  PSP
+}
+
+model FinancialInstitution {
+  id          String          @id @default(cuid())
+  publicId    String          @unique
+  name        String
+  type        InstitutionType
+  clientId    String          @unique
+  webhookUrl  String?
+  rateLimit   Int             @default(100)
+  status      String          @default("ACTIVE")
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  users       InstitutionUser[]
+  loanApplications LoanApplication[]
+  guarantees  Guarantee[]
+  consents    Consent[]
+}
+
+model InstitutionUser {
+  id            String               @id @default(cuid())
+  institutionId String
+  userId        String
+  title         String?
+  institution   FinancialInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([institutionId, userId])
+}
+
+// ---------------------------------------------------------------------------
+// Credit — loans
+// ---------------------------------------------------------------------------
+
+enum LoanApplicationStatus {
+  APPLICATION
+  SUBMITTED
+  DOCUMENT_CHECK
+  KYC_KYB
+  ASSESSMENT
+  FI_REVIEW
+  CREDIT_DECISION
+  OFFER
+  ACCEPTANCE
+  CONTRACT
+  DISBURSEMENT
+  ACTIVE
+  REPAYMENT
+  SETTLED
+  RECOVERY
+  DECLINED
+  CANCELLED
+}
+
+enum CreditDecision {
+  APPROVED
+  DECLINED
+  CONDITIONAL_APPROVAL
+  MORE_INFORMATION_REQUIRED
+  CANCELLED
+}
+
+model LoanApplication {
+  id                       String                 @id @default(cuid())
+  publicId                 String                 @unique
+  schoolId                 String
+  financialInstitutionId   String
+  productCode              String
+  requestedAmount          Decimal                @db.Decimal(18, 2)
+  currency                 String                 @default("RWF")
+  tenorMonths              Int
+  purpose                  String
+  guaranteeRequested       Boolean                @default(false)
+  guaranteeAmountRequested Decimal?               @db.Decimal(18, 2)
+  status                   LoanApplicationStatus  @default(SUBMITTED)
+  decision                 CreditDecision?
+  approvedAmount           Decimal?               @db.Decimal(18, 2)
+  interestRate             Decimal?               @db.Decimal(6, 3)
+  decisionReference        String?
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+  school                   School                 @relation(fields: [schoolId], references: [id])
+  institution              FinancialInstitution   @relation(fields: [financialInstitutionId], references: [id])
+  assessments              CreditAssessment[]
+  loan                     Loan?
+  guarantees               Guarantee[]
+
+  @@index([schoolId])
+  @@index([financialInstitutionId])
+  @@index([status])
+}
+
+enum AssessmentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model CreditAssessment {
+  id                                 String           @id @default(cuid())
+  publicId                           String           @unique
+  applicationId                      String
+  assessmentStatus                   AssessmentStatus @default(COMPLETED)
+  assessmentReference                String           @unique
+  financialInstitutionDecisionRequired Boolean        @default(true)
+  summary                            Json?
+  createdAt                          DateTime         @default(now())
+  application                        LoanApplication  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+enum LoanStatus {
+  OFFERED
+  CONTRACTED
+  DISBURSING
+  ACTIVE
+  IN_ARREARS
+  SETTLED
+  RECOVERY
+  CANCELLED
+}
+
+model Loan {
+  id                     String   @id @default(cuid())
+  publicId               String   @unique
+  applicationId          String   @unique
+  principal              Decimal  @db.Decimal(18, 2)
+  currency               String   @default("RWF")
+  tenorMonths            Int
+  interestRate           Decimal  @db.Decimal(6, 3)
+  principalOutstanding   Decimal  @db.Decimal(18, 2)
+  interestOutstanding    Decimal  @default(0) @db.Decimal(18, 2)
+  feesOutstanding        Decimal  @default(0) @db.Decimal(18, 2)
+  status                 LoanStatus @default(CONTRACTED)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  application            LoanApplication @relation(fields: [applicationId], references: [id])
+  disbursements          LoanDisbursement[]
+  repayments             LoanRepayment[]
+  claims                 GuaranteeClaim[]
+}
+
+model LoanDisbursement {
+  id                    String   @id @default(cuid())
+  publicId              String   @unique
+  loanId                String
+  amount                Decimal  @db.Decimal(18, 2)
+  currency              String   @default("RWF")
+  disbursementAccount   String
+  transactionReference  String   @unique
+  idempotencyKey        String?  @unique
+  createdAt             DateTime @default(now())
+  loan                  Loan     @relation(fields: [loanId], references: [id])
+}
+
+model LoanRepayment {
+  id               String   @id @default(cuid())
+  publicId         String   @unique
+  loanId           String
+  amount           Decimal  @db.Decimal(18, 2)
+  currency         String   @default("RWF")
+  paymentReference String
+  paymentDate      DateTime
+  status           String   @default("POSTED")
+  idempotencyKey   String?  @unique
+  createdAt        DateTime @default(now())
+  loan             Loan     @relation(fields: [loanId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// Guarantee
+// ---------------------------------------------------------------------------
+
+enum GuaranteeStatus {
+  REQUESTED
+  UNDER_REVIEW
+  APPROVED
+  DECLINED
+  ACTIVE
+  EXPIRED
+  CLAIMED
+  SETTLED
+  CANCELLED
+}
+
+enum GuaranteeDecision {
+  APPROVED
+  DECLINED
+  CONDITIONAL_APPROVAL
+}
+
+model GuaranteeFacility {
+  id                    String  @id @default(cuid())
+  name                  String
+  currency              String  @default("RWF")
+  maximumExposure       Decimal @db.Decimal(18, 2)
+  availableCapacity     Decimal @db.Decimal(18, 2)
+  outstandingGuarantees Decimal @default(0) @db.Decimal(18, 2)
+  claimsTotal           Decimal @default(0) @db.Decimal(18, 2)
+  guarantees            Guarantee[]
+}
+
+model Guarantee {
+  id                     String             @id @default(cuid())
+  publicId               String             @unique
+  loanApplicationId      String
+  schoolId               String
+  financialInstitutionId String
+  facilityId             String?
+  loanAmount             Decimal            @db.Decimal(18, 2)
+  guaranteeAmount        Decimal            @db.Decimal(18, 2)
+  guaranteedAmount       Decimal?           @db.Decimal(18, 2)
+  currency               String             @default("RWF")
+  status                 GuaranteeStatus    @default(REQUESTED)
+  decision               GuaranteeDecision?
+  certificateRef         String?            @unique
+  expiryDate             DateTime?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  application            LoanApplication    @relation(fields: [loanApplicationId], references: [id])
+  school                 School             @relation(fields: [schoolId], references: [id])
+  institution            FinancialInstitution @relation(fields: [financialInstitutionId], references: [id])
+  facility               GuaranteeFacility? @relation(fields: [facilityId], references: [id])
+  claims                 GuaranteeClaim[]
+}
+
+model GuaranteeClaim {
+  id                  String   @id @default(cuid())
+  publicId            String   @unique
+  guaranteeId         String
+  loanId              String
+  claimAmount         Decimal  @db.Decimal(18, 2)
+  reason              String
+  supportingReference String?
+  status              String   @default("SUBMITTED")
+  createdAt           DateTime @default(now())
+  guarantee           Guarantee @relation(fields: [guaranteeId], references: [id])
+  loan                Loan      @relation(fields: [loanId], references: [id])
+  recoveries          GuaranteeRecovery[]
+}
+
+model GuaranteeRecovery {
+  id          String   @id @default(cuid())
+  claimId     String
+  amount      Decimal  @db.Decimal(18, 2)
+  currency    String   @default("RWF")
+  reference   String
+  recoveredAt DateTime @default(now())
+  claim       GuaranteeClaim @relation(fields: [claimId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// Consent, KYC, audit
+// ---------------------------------------------------------------------------
+
+enum ConsentStatus {
+  ACTIVE
+  WITHDRAWN
+  EXPIRED
+}
+
+model Consent {
+  id          String        @id @default(cuid())
+  publicId    String        @unique
+  subjectId   String
+  purpose     String
+  recipientId String?
+  recipient   String
+  scope       String[]
+  status      ConsentStatus @default(ACTIVE)
+  evidenceRef String?
+  expiresAt   DateTime
+  withdrawnAt DateTime?
+  createdAt   DateTime      @default(now())
+  institution FinancialInstitution? @relation(fields: [recipientId], references: [id])
+
+  @@index([subjectId, purpose])
+}
+
+enum KycKind {
+  KYC
+  KYB
+}
+
+enum KycRecordStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model KycRecord {
+  id         String          @id @default(cuid())
+  publicId   String          @unique
+  kind       KycKind
+  subjectId  String
+  schoolId   String?
+  status     KycRecordStatus @default(PENDING)
+  notes      String?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  school     School?         @relation(fields: [schoolId], references: [id])
+}
+
+model FinancialProfile {
+  id                       String   @id @default(cuid())
+  schoolId                 String
+  profileStatus            String   @default("VERIFIED")
+  studentCount             Int
+  averageMonthlyCollections Decimal @db.Decimal(18, 2)
+  collectionRate           Decimal  @db.Decimal(5, 2)
+  existingLoanExposure     Decimal  @db.Decimal(18, 2)
+  dataAsOf                 DateTime
+  createdAt                DateTime @default(now())
+  school                   School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorId     String?
+  action      String
+  entityType  String
+  entityId    String
+  requestId   String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  actor       User?    @relation(fields: [actorId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model AccessLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  method     String
+  path       String
+  statusCode Int
+  requestId  String?
+  ip         String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+}
+
+model MembershipApplication {
+  id                 String   @id @default(cuid())
+  publicId           String   @unique
+  schoolName         String
+  registrationNumber String?
+  contactName        String
+  title              String
+  phone              String
+  email              String
+  province           String
+  district           String
+  sector             String?
+  message            String?
+  status             String   @default("SUBMITTED")
+  reviewNote         String?
+  reviewedAt         DateTime?
+  reviewerName       String?
+  reviewerTitle      String?
+  verificationCode   String?  @unique
+  createdAt          DateTime @default(now())
+  school             School?
+
+  @@index([email])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  publicId  String   @unique
+  userId    String?
+  channel   String
+  subject   String
+  body      String
+  status    String   @default("QUEUED")
+  sentAt    DateTime?
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model DomainEvent {
+  id          String    @id @default(cuid())
+  eventType   String
+  aggregateId String
+  payload     Json
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+
+  @@index([eventType, createdAt])
+}
+
+model IdempotencyRecord {
+  id             String   @id @default(cuid())
+  key            String
+  method         String
+  path           String
+  requestHash    String
+  responseStatus Int
+  responseBody   Json
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime
+
+  @@unique([key, method, path])
+}
+
+model IdSequence {
+  prefix String @id
+  value  Int    @default(0)
+}

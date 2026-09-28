@@ -1,0 +1,26 @@
+:root {
+  font-family: Inter, Avenir, "Segoe UI", Arial, sans-serif;
+  color: #092b3c;
+  background: #f7faf9;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --navy: #092b3c;
+  --aqua: #18d6b4;
+  --mint: #c7f7ed;
+  --white: #f7faf9;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+html:has(.app-shell),
+body:has(.app-shell) {
+  height: 100%;
+  overflow: hidden;
+}
+@media (hover: hover) {
+  .button.primary, .nav-cta { transition: transform .25s cubic-bezier(.22,1,.36,1), background .25s, box-shadow .25s; }
+}
+body { margin: 0; min-width: 320px; }
+a { color: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
