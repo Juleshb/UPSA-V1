@@ -55,12 +55,9 @@ export function SiteHeader() {
             onToggle={() => setOpenDropdown((current) => (current === menu.id ? null : menu.id))}
           />
         ))}
+        <NavLink to="/services">Online services</NavLink>
         <NavLink to={user ? '/app' : '/login'} className="nav-signin">
           {user ? 'Workspace' : 'Sign in'}
-        </NavLink>
-        <NavLink to="/contact">Briefing</NavLink>
-        <NavLink to="/register" className="nav-cta">
-          Register a school
         </NavLink>
       </nav>
 

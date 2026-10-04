@@ -13,7 +13,7 @@ main { overflow-x: clip; }
 .menu-toggle.open i:last-of-type { top: 21px; transform: rotate(-45deg); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
 .mini-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--navy); }
-.mini-brand img { width: 36px; height: 36px; border-radius: 9px; }
+.mini-brand img { width: 36px; height: 36px; }
 .brand-lockup { display: flex; flex-direction: column; align-items: flex-start; line-height: 1; }
 .brand-line { display: flex; align-items: baseline; gap: 5px; }
 .brand-line b { font-size: 15px; font-weight: 800; letter-spacing: .08em; }
@@ -64,7 +64,7 @@ h2 { margin: 0; font-size: clamp(40px,5vw,70px); line-height: 1.02; letter-spaci
 .light-card { background: var(--white); }
 .dark-card { color: white; background: #0d394e; }
 .icon-card { background: var(--aqua); }
-.icon-card img { width: min(46%,150px); box-shadow: 0 22px 40px rgba(9,43,60,.22); border-radius: 25%; }
+.icon-card img { width: min(46%,150px); }
 .logo-download { position: absolute; right: 18px; bottom: 16px; min-height: 32px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 100px; border: 1px solid currentColor; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; color: inherit; }
 .light-card .logo-download, .icon-card .logo-download { color: var(--navy); }
 .logo-download:hover { background: rgba(255,255,255,.14); }

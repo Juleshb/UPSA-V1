@@ -118,7 +118,9 @@ export async function decideApplication(applicationId: string, input: {
           ? LoanApplicationStatus.OFFER
           : input.decision === CreditDecision.CANCELLED
             ? LoanApplicationStatus.CANCELLED
-            : LoanApplicationStatus.DECLINED,
+            : input.decision === CreditDecision.MORE_INFORMATION_REQUIRED
+              ? LoanApplicationStatus.DOCUMENT_CHECK
+              : LoanApplicationStatus.DECLINED,
       },
     });
 

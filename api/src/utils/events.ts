@@ -18,6 +18,8 @@ export const EventTypes = {
   loanOverdue: 'loan.overdue',
   guaranteeApproved: 'guarantee.approved',
   guaranteeClaimed: 'guarantee.claimed',
+  donationReceived: 'donation.received',
+  donationRefunded: 'donation.refunded',
 } as const;
 
 export async function publishEvent(

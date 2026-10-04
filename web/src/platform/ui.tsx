@@ -4,12 +4,12 @@ import { statusLabel } from './format'
 
 export function StatusPill({ value }: { value: string }) {
   const token = value.toUpperCase()
-  const tone = token === 'INACTIVE' || /FAILED|DECLINED|OVERDUE|CANCELLED|SUSPENDED|REJECTED/.test(token)
+  const tone = token === 'INACTIVE' || /FAILED|DECLINED|OVERDUE|CANCELLED|SUSPENDED|REJECTED|NON_COMPLIANT|UNMATCHED|DUPLICATE|EXPIRED/.test(token)
     ? 'bad'
-    : /PAID|ACTIVE|SUCCESS|APPROVED|MATCHED|VERIFIED|ACCEPTED|CONFIRMED/.test(token)
-      ? 'ok'
-      : /PENDING|ISSUED|SUBMITTED|REQUESTED|OFFER|PILOT|INITIATED|REVIEW/.test(token)
-        ? 'wait'
+    : /PARTIALLY|PENDING|ISSUED|SUBMITTED|REQUESTED|OFFER|PILOT|INITIATED|REVIEW|MORE_INFORMATION|PLEDGED|DRAFT|HOLD|PROCESSING/.test(token)
+      ? 'wait'
+      : /PAID|ACTIVE|SUCCESS|APPROVED|MATCHED|VERIFIED|ACCEPTED|CONFIRMED|FULFILLED|RECEIVED|DISTRIBUTED|COMPLETED|COMPLIANT|REGISTERED|PUBLISHED|ALLOCATED|TARGET_REACHED|CERTIFIED|PASSED|ENROLLED|PRESENT|HELD/.test(token)
+        ? 'ok'
         : 'neutral'
   return <em className={`app-pill ${tone}`}>{statusLabel(value)}</em>
 }
@@ -156,16 +156,21 @@ export function Field({
   label,
   hint,
   span,
+  note,
   children,
 }: {
   label: string
   hint?: string
   span?: 'full'
+  note?: 'required' | 'optional' | 'automatic'
   children: ReactNode
 }) {
   return (
     <label className={`app-field${span === 'full' ? ' full' : ''}`}>
-      <span className="app-field-label">{label}</span>
+      <span className="app-field-label">
+        {label}
+        {note ? <em className={`app-note ${note}`}>{note === 'required' ? 'Required' : note === 'optional' ? 'Optional' : 'Automatic'}</em> : null}
+      </span>
       {children}
       {hint ? <small className="app-field-hint">{hint}</small> : null}
     </label>

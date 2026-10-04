@@ -10,7 +10,7 @@ export function About() {
       <PageHero
         kicker="About"
         title="A trusted digital bridge for private education."
-        lead="UPSA Next Payment is proposed by the Rwanda Union of Private Schools Association as the common digital infrastructure for member schools, parents and licensed financial partners."
+        lead="UPSA Next Payment is proposed by the Universor of Private Schools Association as the common digital infrastructure for member schools, parents and licensed financial partners."
         crumbs={[{ label: 'Home', to: '/' }, { label: 'About' }]}
         image="/images/scene-bridge.png"
         imageAlt="A dusk bridge standing for the trusted link UPSA Next Payment proposes"

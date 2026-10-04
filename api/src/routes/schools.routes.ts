@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import { Router } from 'express';
-import { SchoolStatus } from '@prisma/client';
+import { RegistrationReviewStatus, SchoolStatus } from '@prisma/client';
 import { z } from 'zod';
 import { asyncHandler } from '../utils/async';
 import { errors } from '../utils/errors';
@@ -39,8 +39,10 @@ const updateSchema = z.object({
 const personSchema = z.object({
   fullName: z.string().min(2),
   title: z.string().min(2),
+  nationalId: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email().optional(),
+  appointmentDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   role: z.enum(['MANAGEMENT', 'SIGNATORY']),
 });
 
@@ -52,9 +54,11 @@ const ownershipSchema = z.object({
 
 const bankSchema = z.object({
   bankName: z.string().min(2),
+  branch: z.string().min(2).optional(),
   accountName: z.string().min(2),
   accountNumber: z.string().min(4),
   currency: z.string().default('RWF'),
+  swiftCode: z.string().optional(),
   isPrimary: z.boolean().optional(),
 });
 
@@ -63,8 +67,11 @@ const documentSchema = z.object({
     'LICENSE',
     'REGISTRATION_CERTIFICATE',
     'TIN_CERTIFICATE',
+    'OWNERSHIP_DOCUMENTS',
     'RUPSA_MEMBERSHIP',
     'OWNER_IDENTITY',
+    'AUTHORIZATION_LETTER',
+    'ID_DOCUMENT',
     'BANK_LETTER',
     'OTHER',
   ]),
@@ -159,6 +166,23 @@ schoolsRouter.post(
       rupsaMemberId: z.string().min(3).optional(),
     }).parse(req.body);
     res.json(await schools.decideMembership(req.params.schoolId, body, req.actor?.id));
+  }),
+);
+
+schoolsRouter.post(
+  '/:schoolId/verification',
+  requirePermission('admin.write'),
+  asyncHandler(async (req, res) => {
+    const body = z.object({
+      status: z.nativeEnum(RegistrationReviewStatus),
+      registrationVerified: z.boolean(),
+      legalDocumentsVerified: z.boolean(),
+      representativeVerified: z.boolean(),
+      addressVerified: z.boolean(),
+      bankAccountVerified: z.boolean(),
+      documentsComplete: z.boolean(),
+    }).parse(req.body);
+    res.json(await schools.recordRegistrationReview(req.params.schoolId, body, req.actor?.id));
   }),
 );
 

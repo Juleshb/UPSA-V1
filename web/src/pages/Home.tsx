@@ -1,8 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { FeePreview } from '../components/FeePreview'
-import { GraphicIcon, OrbitScene, type GraphicName } from '../components/Graphics'
-import { Reveal } from '../components/Reveal'
 import { usePageTitle } from '../components/usePageTitle'
 
 const hashRoutes: Record<string, string> = {
@@ -13,187 +11,365 @@ const hashRoutes: Record<string, string> = {
   '#overview': '/about',
 }
 
-const capabilities: { to: string; index: string; title: string; copy: string; icon: GraphicName }[] = [
-  { to: '/platform', index: '01', title: 'School onboarding', copy: 'Verified digital identities for UPSA member schools, with KYB, documents and approval workflows.', icon: 'school' },
-  { to: '/solutions/parents', index: '02', title: 'Families and students', copy: 'Parent and guardian accounts linked to students, with privacy safeguards for children’s data.', icon: 'family' },
-  { to: '/platform/payments', index: '03', title: 'Fees and payments', copy: 'Invoices, partial payments, plans, scholarships and automatic digital receipts.', icon: 'pay' },
-  { to: '/platform/payments', index: '04', title: 'Reconciliation', copy: 'Unique references that match invoices, school ledgers and bank or PSP settlements.', icon: 'ledger' },
-  { to: '/solutions/schools', index: '05', title: 'School dashboards', copy: 'Live visibility of billed, collected and outstanding fees and settlement status.', icon: 'dash' },
-  { to: '/platform/financing', index: '06', title: 'Financing marketplace', copy: 'One standardised application for working capital, expansion, equipment and energy products.', icon: 'loan' },
-  { to: '/platform/guarantee', index: '07', title: 'Credit and guarantee', copy: 'Preliminary assessment for lenders, plus a structured UPSA guarantee register.', icon: 'shield' },
-  { to: '/platform/compliance', index: '08', title: 'Compliance and APIs', copy: 'Consent, audit trails and institution-neutral APIs for banks, MFIs and payment providers.', icon: 'api' },
+const features = [
+  { n: '01', title: 'Membership on record', copy: 'A school asks to join. The request stays in review until a UPSA reader confirms it.' },
+  { n: '02', title: 'A signed certificate', copy: 'A confirmed school receives a certificate. Anyone can check that the number is genuine.' },
+  { n: '03', title: 'School payments', copy: 'Invoices, partial payments, plans and receipts that match the school ledger.' },
+  { n: '04', title: 'Financing and guarantee', copy: 'A standard application for school finance, with a guarantee register beside the lender’s own decision.' },
+  { n: '05', title: 'Training and reports', copy: 'Public courses, then a certificate. Schools can also see what has been collected.' },
 ]
 
-const audiences = [
-  { to: '/solutions/schools', image: '/images/scene-schools.png', alt: 'School administrator reviewing fee collections', label: 'For schools', title: 'Collect with confidence.', copy: 'Registration, invoicing, receipts and live collection dashboards in one place.' },
-  { to: '/solutions/parents', image: '/images/scene-parents.png', alt: 'Parent paying school fees on a phone', label: 'For parents', title: 'Pay the simple way.', copy: 'Clear balances, approved payment rails and an instant digital receipt.' },
-  { to: '/solutions/partners', image: '/images/scene-partners.png', alt: 'Financial partners meeting in Kigali', label: 'For financial partners', title: 'Lend with better signal.', copy: 'Verified, consent-based school data — you keep the final credit decision.' },
+const services = [
+  {
+    label: 'Track school payments',
+    title: 'See what the school has collected',
+    copy: 'Invoices, balances and receipts stay on one school record, so a bursar can confirm what has actually been received.',
+    kicker: 'Term collections',
+    period: 'Illustration · this term',
+    unit: 'RWF',
+    amount: '48,600,000',
+    foot: 'Received against issued invoices',
+  },
+  {
+    label: 'Register a school',
+    title: 'Open the school file',
+    copy: 'A confirmed member registers the school once. Families, invoices and the certificate all point back to that file.',
+    kicker: 'School file',
+    period: 'Membership confirmed',
+    unit: '',
+    amount: '1 record',
+    foot: 'School, families and certificate together',
+  },
+  {
+    label: 'Verify a certificate',
+    title: 'Check that a number is genuine',
+    copy: 'Anyone can enter a certificate number, or scan it, and see whether UPSA has confirmed that school.',
+    kicker: 'Certificate check',
+    period: 'Public verification',
+    unit: '',
+    amount: 'Genuine',
+    foot: 'Matched to a confirmed member school',
+  },
+  {
+    label: 'Financial training',
+    title: 'Courses a school can finish',
+    copy: 'Public courses sit beside the membership record. A completed course can carry its own certificate.',
+    kicker: 'Training',
+    period: 'Open courses',
+    unit: '',
+    amount: 'Certified',
+    foot: 'A course record next to the school file',
+  },
 ]
 
-const steps = [
-  { n: '01', title: 'Onboard the school', copy: 'Verify the member school, its documents and the people who can collect or request finance.' },
-  { n: '02', title: 'Invoice the family', copy: 'Issue a clear term bill with a unique reference, plans, scholarships and partial payments.' },
-  { n: '03', title: 'Collect on approved rails', copy: 'Parents pay in RWF on eKash-ready channels. The school ledger and receipt update together.' },
-  { n: '04', title: 'Finance when ready', copy: 'Share consent-based performance with licensed institutions. They keep the credit decision.' },
+const stories = [
+  {
+    quote: 'The membership file and the school file finally sit in one place.',
+    body: 'The request, the certificate and the invoices no longer live in separate folders.',
+    role: 'School bursar',
+    detail: 'Member school',
+    initials: 'SB',
+  },
+  {
+    quote: 'I can see the balance and the receipt without calling the office.',
+    body: 'The bill, what is still due, and the receipt after payment are on the same screen.',
+    role: 'Parent',
+    detail: 'School fees',
+    initials: 'PA',
+  },
+  {
+    quote: 'We start from a school that UPSA has already confirmed.',
+    body: 'The finance file opens from a membership that a UPSA reader has already signed.',
+    role: 'Finance partner',
+    detail: 'Licensed institution',
+    initials: 'FP',
+  },
 ]
+
+const faqs = {
+  Information: [
+    { q: 'How does a school join?', a: 'The school submits a membership request. It stays in review until a UPSA reader confirms it and signs the certificate.' },
+    { q: 'Can a school register before membership is confirmed?', a: 'A school request can be sent first. Approval waits until membership is confirmed.' },
+    { q: 'What currency does the platform use?', a: 'Amounts are in RWF. Payment and lending activity stays with licensed institutions.' },
+  ],
+  'School payments': [
+    { q: 'What does a family see?', a: 'A clear school bill, the balance, and a digital receipt after payment.' },
+    { q: 'Do receipts match the school ledger?', a: 'Invoices, partial payments, plans and receipts are kept against the same school record.' },
+  ],
+  Membership: [
+    { q: 'How is a certificate checked?', a: 'Open Verify a membership and enter the certificate number. A genuine certificate can also be scanned.' },
+    { q: 'Who confirms membership?', a: 'A UPSA reader reviews the request and confirms it before the school is treated as a member.' },
+  ],
+} as const
+
+type FaqTab = keyof typeof faqs
+
+const faces = [
+  '/images/scene-schools.png',
+  '/images/scene-parents.png',
+  '/images/hero-rwanda-campus.png',
+  '/images/scene-partners.png',
+]
+
+function StartForm({ id }: { id: string }) {
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+
+  function onSubmit(event: FormEvent) {
+    event.preventDefault()
+    const next = email.trim()
+    navigate(next ? `/membership?email=${encodeURIComponent(next)}` : '/membership')
+  }
+
+  return (
+    <form className="portal-start" onSubmit={onSubmit}>
+      <label className="sr-only" htmlFor={id}>School email</label>
+      <input
+        id={id}
+        type="email"
+        name="email"
+        autoComplete="email"
+        placeholder="School email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        required
+      />
+      <button type="submit">Get started</button>
+    </form>
+  )
+}
+
+function Arrow({ direction }: { direction: 'left' | 'right' }) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      {direction === 'left'
+        ? <path d="M10 3 5 8l5 5" />
+        : <path d="M6 3l5 5-5 5" />}
+    </svg>
+  )
+}
 
 export function Home() {
   const { hash } = useLocation()
   const navigate = useNavigate()
-  usePageTitle('UPSA Next Payment — Official school payments and financial services')
+  const featureTrack = useRef<HTMLDivElement>(null)
+  const storyTrack = useRef<HTMLDivElement>(null)
+  const [service, setService] = useState(0)
+  const [tab, setTab] = useState<FaqTab>('Information')
+  const [open, setOpen] = useState(0)
+  usePageTitle('Universor of Private Schools Association — UPSA Next Payment')
 
   useEffect(() => {
     const next = hashRoutes[hash]
     if (next) navigate(next, { replace: true })
   }, [hash, navigate])
 
+  function slide(track: HTMLDivElement | null, direction: number) {
+    if (!track) return
+    const card = track.querySelector<HTMLElement>(':scope > *')
+    const distance = card ? card.offsetWidth + 16 : track.clientWidth * 0.8
+    track.scrollBy({ left: direction * distance, behavior: 'smooth' })
+  }
+
+  const active = services[service]
+
   return (
-    <main className="landing">
-      <section className="hero-split" id="top">
-        <div className="hero-copy-col">
-          <div className="eyebrow"><span /> Official platform · Rwanda</div>
-          <h1>The digital bridge between schools and finance.</h1>
-          <p className="hero-copy">
-            UPSA Next Payment is the official platform concept of the Rwanda Union of
-            Private Schools Association — connecting member schools, parents
-            and licensed financial institutions.
+    <main className="portal">
+      <section className="portal-hero" id="top">
+        <div className="portal-hero-copy">
+          <h1>Clear school payments, a secure membership</h1>
+          <p>
+            From a membership request to a receipt in RWF, UPSA Next Payment
+            gives private schools, families and licensed partners one record they can trust.
           </p>
-          <div className="actions">
-            <Link className="button primary" to="/platform">
-              Explore the platform
-              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10m0 0 4-4m-4 4L6 9M4 16h12" /></svg>
-            </Link>
-            <Link className="button secondary" to="/login">Sign in to workspace</Link>
-          </div>
+          <StartForm id="start-email" />
         </div>
-        <div className="hero-visual">
-          <img src="/images/hero-rwanda-campus.png" alt="A private school campus in the hills of Rwanda" />
-          <OrbitScene />
-          <div className="hero-chip chip-a">
-            <span>Collections</span>
-            <b>Live school ledgers</b>
-          </div>
-          <div className="hero-chip chip-b">
-            <span>Rwanda · RWF</span>
-            <b>eKash-ready rails</b>
-          </div>
+        <div className="portal-faces" aria-hidden="true">
+          {faces.map((src) => <img key={src} src={src} alt="" />)}
         </div>
       </section>
 
-      <section className="lp-strip" aria-label="Official snapshot">
-        <div><b>Proposed by</b><span>Rwanda Union of Private Schools Association</span></div>
-        <div><b>Platform</b><span>Payments, credit, guarantee and reporting</span></div>
-        <div><b>Market</b><span>Schools, families, banks, MFIs and PSPs</span></div>
-        <div><b>Country</b><span>Rwanda · RWF · eKash-ready rails</span></div>
-      </section>
-
-      <section className="story section">
-        <Reveal>
-          <div className="section-label">01 / Opportunity</div>
-        </Reveal>
-        <div className="story-grid lp-story">
-          <Reveal><h2>One path.<br />Three partners.</h2></Reveal>
-          <Reveal className="story-copy" delay={80}>
+      <section className="portal-band">
+        <div className="portal-band-head">
+          <div>
+            <p className="portal-kicker">Core services</p>
+            <h2>A clearer way to run a member school</h2>
             <p>
-              Private schools still chase fees across fragmented channels.
-              Lenders still lack a consistent view of school performance.
-              UPSA Next Payment is the common digital infrastructure in between —
-              a trusted bridge, not a bank.
+              Membership, payments, finance and training stay on one platform, from the first request to a confirmed certificate.
             </p>
-            <div className="traits">
-              <span>Connected</span><span>Trusted</span><span>Official</span>
-            </div>
-          </Reveal>
-          <Reveal delay={140}>
-            <div className="photo-panel">
-              <img src="/images/scene-bridge.png" alt="A modern bridge at dusk, a visual for the digital connection UPSA Next Payment creates" />
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="section lp-platform">
-        <Reveal>
-          <div className="section-label">02 / Platform</div>
-          <div className="lp-platform-head">
-            <h2>A complete operating system for school finance.</h2>
-            <p>Open a dedicated page for each part of the system, or start with the platform overview.</p>
           </div>
-        </Reveal>
-        <div className="lp-cards">
-          {capabilities.map((item, index) => (
-            <Reveal key={item.title + item.index} delay={index * 40}>
-              <Link className="page-card" to={item.to}>
-                <span className="icon-badge"><GraphicIcon name={item.icon} /></span>
-                <span>{item.index}</span>
-                <h3>{item.title}</h3>
-                <p>{item.copy}</p>
-              </Link>
-            </Reveal>
+          <div className="portal-arrows">
+            <button type="button" aria-label="Previous services" onClick={() => slide(featureTrack.current, -1)}>
+              <Arrow direction="left" />
+            </button>
+            <button type="button" aria-label="Next services" onClick={() => slide(featureTrack.current, 1)}>
+              <Arrow direction="right" />
+            </button>
+          </div>
+        </div>
+        <div className="portal-track" ref={featureTrack}>
+          {features.map((item) => (
+            <article key={item.n}>
+              <small>{item.n}</small>
+              <h3>{item.title}</h3>
+              <p>{item.copy}</p>
+            </article>
           ))}
         </div>
       </section>
 
-      <section className="section how-steps">
-        <Reveal>
-          <div className="section-label">03 / How it works</div>
-          <div className="lp-platform-head">
-            <h2>From registration to settlement.</h2>
-            <p>A structured path for member schools — invoice, collect, reconcile, then open financing when it is useful.</p>
-          </div>
-        </Reveal>
-        <ol className="step-grid">
-          {steps.map((step, index) => (
-            <Reveal key={step.n} delay={index * 70} as="li">
-              <small>{step.n}</small>
-              <h3>{step.title}</h3>
-              <p>{step.copy}</p>
-            </Reveal>
+      <section className="portal-tools">
+        <h2>Self-service, from the first request</h2>
+        <div className="portal-segments" role="tablist" aria-label="Self-service">
+          {services.map((item, index) => (
+            <button
+              key={item.label}
+              type="button"
+              role="tab"
+              aria-selected={service === index}
+              onClick={() => setService(index)}
+            >
+              {item.label}
+            </button>
           ))}
-        </ol>
+        </div>
+        <div className="portal-tool-panel">
+          <div>
+            <h3>{active.title}</h3>
+            <p>{active.copy}</p>
+          </div>
+          <aside className="portal-mock" aria-hidden="true">
+            <div className="portal-mock-card">
+              <span className="portal-mock-mark" />
+              <div>
+                <b>{active.kicker}</b>
+                <small>{active.period}</small>
+              </div>
+              <p className="portal-mock-amount">{active.unit && <span>{active.unit}</span>} {active.amount}</p>
+              <small>{active.foot}</small>
+            </div>
+          </aside>
+        </div>
       </section>
 
-      <section className="section fee-section">
+      <section className="portal-trust">
+        <div className="portal-trust-head">
+          <h2>Built for trust, designed for clarity</h2>
+          <Link to="/membership">Get started today</Link>
+        </div>
+        <div className="portal-stage" aria-hidden="true">
+          <div className="portal-window">
+            <header>
+              <i />
+              <b>Member school</b>
+              <span>Certificate on file</span>
+            </header>
+            <div className="portal-window-grid">
+              <article>
+                <small>Collected this term</small>
+                <strong>48.6M</strong>
+                <span>RWF · illustration</span>
+              </article>
+              <article>
+                <small>Open invoices</small>
+                <strong>126</strong>
+                <span>Families on the school file</span>
+              </article>
+              <img src="/images/scene-payments.png" alt="" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="portal-plan">
+        <div className="portal-plan-copy">
+          <h2>Estimate collections at school scale</h2>
+          <p>
+            Set enrolment and a typical term fee. The figure is an illustration in RWF, not a quote or a credit offer.
+          </p>
+        </div>
         <FeePreview />
       </section>
 
-      <section className="section lp-audiences">
-        <Reveal>
-          <div className="section-label light">04 / Who it serves</div>
-          <div className="lp-audience-head">
-            <h2>Built for every side of the table.</h2>
+      <section className="portal-band">
+        <div className="portal-band-head">
+          <div>
+            <h2>How the platform is used</h2>
+            <p>Three views of the same record: the school, the family, and the licensed partner.</p>
           </div>
-        </Reveal>
-        <div className="page-grid three">
-          {audiences.map((item, index) => (
-            <Reveal key={item.label} delay={index * 80}>
-              <Link className="media-card" to={item.to}>
-                <img src={item.image} alt={item.alt} />
-                <div>
-                  <span>{item.label}</span>
-                  <h3>{item.title}</h3>
-                  <p>{item.copy}</p>
-                </div>
-              </Link>
-            </Reveal>
+          <div className="portal-arrows">
+            <button type="button" aria-label="Previous stories" onClick={() => slide(storyTrack.current, -1)}>
+              <Arrow direction="left" />
+            </button>
+            <button type="button" aria-label="Next stories" onClick={() => slide(storyTrack.current, 1)}>
+              <Arrow direction="right" />
+            </button>
+          </div>
+        </div>
+        <div className="portal-track portal-stories" ref={storyTrack}>
+          {stories.map((item) => (
+            <article key={item.role}>
+              <h3>“{item.quote}”</h3>
+              <p>{item.body}</p>
+              <footer>
+                <i>{item.initials}</i>
+                <span>
+                  <b>{item.role}</b>
+                  <small>{item.detail}</small>
+                </span>
+              </footer>
+            </article>
           ))}
         </div>
       </section>
 
-      <section className="closing lp-briefing">
-        <Reveal>
-          <img src="/rupsa-next-logo-reversed.svg" alt="UPSA Next Payment" />
-          <p>Payments. Access. Progress.</p>
-          <h2>Ready for an official briefing.</h2>
-          <p className="lp-briefing-copy">
-            This site presents the proposed architecture for UPSA boards,
-            member schools and regulated financial institutions.
-          </p>
-          <div className="actions">
-            <Link className="button primary inverse" to="/register">Register a school</Link>
-            <Link className="button secondary ghost" to="/contact">Request a briefing</Link>
+      <section className="portal-faq-section">
+        <div>
+          <h2>Frequently asked questions</h2>
+          <p>Short answers on membership, school payments and certificates.</p>
+        </div>
+        <div>
+          <div className="portal-faq-tabs" role="tablist" aria-label="Question topics">
+            {(Object.keys(faqs) as FaqTab[]).map((name) => (
+              <button
+                key={name}
+                type="button"
+                role="tab"
+                aria-selected={tab === name}
+                onClick={() => {
+                  setTab(name)
+                  setOpen(0)
+                }}
+              >
+                {name}
+              </button>
+            ))}
           </div>
-        </Reveal>
+          <div className="portal-faq">
+            {faqs[tab].map((item, index) => {
+              const shown = open === index
+              return (
+                <article key={item.q}>
+                  <button
+                    type="button"
+                    aria-expanded={shown}
+                    onClick={() => setOpen(shown ? -1 : index)}
+                  >
+                    {item.q}
+                    <span aria-hidden="true">{shown ? '–' : '+'}</span>
+                  </button>
+                  {shown && <p>{item.a}</p>}
+                </article>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="portal-close">
+        <h2>Take a place in the association</h2>
+        <p>We’ll open the membership request if the school is new, or the workspace if it already has one.</p>
+        <StartForm id="start-email-close" />
       </section>
     </main>
   )

@@ -1,4 +1,14 @@
-import { KybStatus, MembershipStatus, Prisma, SchoolStatus } from '@prisma/client';
+import {
+  KybStatus,
+  LegalStatus,
+  MembershipStatus,
+  OperatingStatus,
+  OwnershipType,
+  Prisma,
+  RegistrationReviewStatus,
+  SchoolStatus,
+  SchoolType,
+} from '@prisma/client';
 import { errors } from '../utils/errors';
 import { EventTypes, publishEvent, writeAudit } from '../utils/events';
 import { nextPublicId } from '../utils/ids';
@@ -198,23 +208,57 @@ export async function findSchool(schoolId: string) {
   return school;
 }
 
+function dateOnly(value: Date | null) {
+  return value ? value.toISOString().slice(0, 10) : null;
+}
+
 function serializeSchool(school: Awaited<ReturnType<typeof findSchool>>) {
   return {
     schoolId: school.publicId,
     rupsaMemberId: school.rupsaMemberId,
     schoolName: school.schoolName,
     registrationNumber: school.registrationNumber,
+    schoolType: school.schoolType,
+    ownershipType: school.ownershipType,
+    dateEstablished: dateOnly(school.dateEstablished),
+    operatingStatus: school.operatingStatus,
+    studentCount: school.studentCount,
+    teacherCount: school.teacherCount,
+    staffCount: school.staffCount,
     taxIdentificationNumber: school.taxIdentificationNumber,
+    registrationCertificateNumber: school.registrationCertificateNumber,
+    registrationDate: dateOnly(school.registrationDate),
+    registrationAuthority: school.registrationAuthority,
+    licenseNumber: school.licenseNumber,
+    licenseExpiryDate: dateOnly(school.licenseExpiryDate),
+    legalStatus: school.legalStatus,
     phone: school.phone,
+    alternativePhone: school.alternativePhone,
     email: school.email,
+    website: school.website,
+    emergencyContact: school.emergencyContact,
     address: {
       province: school.province,
       district: school.district,
       sector: school.sector,
+      cell: school.cell,
+      village: school.village,
+      physicalAddress: school.physicalAddress,
+      gpsCoordinates: school.gpsCoordinates,
+      postalAddress: school.postalAddress,
     },
     status: school.status,
     kybStatus: school.kybStatus,
     membershipStatus: school.membershipStatus,
+    reviewStatus: school.reviewStatus,
+    checklist: {
+      registrationVerified: school.registrationVerified,
+      legalDocumentsVerified: school.legalDocumentsVerified,
+      representativeVerified: school.representativeVerified,
+      addressVerified: school.addressVerified,
+      bankAccountVerified: school.bankAccountVerified,
+      documentsComplete: school.documentsComplete,
+    },
     createdAt: school.createdAt.toISOString(),
     updatedAt: school.updatedAt.toISOString(),
   };
@@ -271,10 +315,15 @@ export async function getRegistration(schoolId: string) {
     bankAccounts: bankAccounts.map((row) => ({
       id: row.id,
       bankName: row.bankName,
+      branch: row.branch,
       accountName: row.accountName,
       accountNumber: row.accountNumber,
       currency: row.currency,
+      swiftCode: row.swiftCode,
       isPrimary: row.isPrimary,
+      accountVerified: row.accountVerified,
+      verifiedBy: row.verifiedBy,
+      verificationDate: dateOnly(row.verificationDate),
     })),
     documents: documents.map((row) => ({
       id: row.id,
@@ -294,13 +343,26 @@ export async function getRegistration(schoolId: string) {
   };
 }
 
-function serializePerson(row: { id: string; fullName: string; title: string; phone: string | null; email: string | null; authorized: boolean }) {
+function serializePerson(row: {
+  id: string;
+  publicId: string | null;
+  fullName: string;
+  title: string;
+  nationalId: string | null;
+  phone: string | null;
+  email: string | null;
+  appointmentDate: Date | null;
+  authorized: boolean;
+}) {
   return {
     id: row.id,
+    representativeId: row.publicId,
     fullName: row.fullName,
     title: row.title,
+    nationalId: row.nationalId,
     phone: row.phone,
     email: row.email,
+    appointmentDate: dateOnly(row.appointmentDate),
     role: row.authorized ? 'SIGNATORY' : 'MANAGEMENT',
   };
 }
@@ -345,19 +407,24 @@ export async function removeOwnership(schoolId: string, ownershipId: string, act
 export async function addPerson(schoolId: string, input: {
   fullName: string;
   title: string;
+  nationalId?: string;
   phone?: string;
   email?: string;
+  appointmentDate?: string;
   role: 'MANAGEMENT' | 'SIGNATORY';
 }, actorId?: string) {
   const school = await findSchool(schoolId);
   assertEditable(school.status);
   const row = await prisma.schoolRepresentative.create({
     data: {
+      publicId: await nextPublicId('REP'),
       schoolId: school.id,
       fullName: input.fullName,
       title: input.title,
+      nationalId: input.nationalId,
       phone: input.phone,
       email: input.email,
+      appointmentDate: input.appointmentDate ? new Date(input.appointmentDate) : undefined,
       authorized: input.role === 'SIGNATORY',
     },
   });
@@ -376,9 +443,11 @@ export async function removePerson(schoolId: string, personId: string, actorId?:
 
 export async function addBankAccount(schoolId: string, input: {
   bankName: string;
+  branch?: string;
   accountName: string;
   accountNumber: string;
   currency?: string;
+  swiftCode?: string;
   isPrimary?: boolean;
 }, actorId?: string) {
   const school = await findSchool(schoolId);
@@ -391,9 +460,11 @@ export async function addBankAccount(schoolId: string, input: {
       data: {
         schoolId: school.id,
         bankName: input.bankName,
+        branch: input.branch,
         accountName: input.accountName,
         accountNumber: input.accountNumber,
         currency: input.currency ?? 'RWF',
+        swiftCode: input.swiftCode,
         isPrimary: input.isPrimary ?? false,
       },
     });
@@ -402,10 +473,15 @@ export async function addBankAccount(schoolId: string, input: {
   return {
     id: row.id,
     bankName: row.bankName,
+    branch: row.branch,
     accountName: row.accountName,
     accountNumber: row.accountNumber,
     currency: row.currency,
+    swiftCode: row.swiftCode,
     isPrimary: row.isPrimary,
+    accountVerified: row.accountVerified,
+    verifiedBy: row.verifiedBy,
+    verificationDate: dateOnly(row.verificationDate),
   };
 }
 
@@ -653,44 +729,81 @@ const PUBLIC_DOCUMENTS = new Set([
   'LICENSE',
   'REGISTRATION_CERTIFICATE',
   'TIN_CERTIFICATE',
+  'OWNERSHIP_DOCUMENTS',
   'RUPSA_MEMBERSHIP',
   'OWNER_IDENTITY',
+  'AUTHORIZATION_LETTER',
+  'ID_DOCUMENT',
   'BANK_LETTER',
   'OTHER',
 ]);
+
+const REQUIRED_PUBLIC_DOCUMENTS = [
+  'REGISTRATION_CERTIFICATE',
+  'LICENSE',
+  'AUTHORIZATION_LETTER',
+  'ID_DOCUMENT',
+  'BANK_LETTER',
+];
 
 export async function submitPublicApplication(input: {
   rupsaMemberId?: string;
   schoolName: string;
   registrationNumber: string;
-  taxIdentificationNumber?: string;
+  schoolType: SchoolType;
+  ownershipType: OwnershipType;
+  dateEstablished: string;
+  operatingStatus: OperatingStatus;
+  studentCount: number;
+  teacherCount: number;
+  staffCount?: number;
+  taxIdentificationNumber: string;
+  registrationCertificateNumber: string;
+  registrationDate: string;
+  registrationAuthority: string;
+  licenseNumber: string;
+  licenseExpiryDate: string;
+  legalStatus: LegalStatus;
   phone: string;
+  alternativePhone?: string;
   email: string;
-  address: { province: string; district: string; sector?: string };
-  owners: { ownerName: string; ownershipPct: number; nationalId?: string }[];
-  management: { fullName: string; title: string; phone?: string; email?: string }[];
-  signatories: { fullName: string; title: string; phone?: string; email?: string }[];
-  bankAccount: { bankName: string; accountName: string; accountNumber: string; currency?: string };
+  website?: string;
+  emergencyContact?: string;
+  address: {
+    province: string;
+    district: string;
+    sector: string;
+    cell: string;
+    village: string;
+    physicalAddress: string;
+    gpsCoordinates?: string;
+    postalAddress?: string;
+  };
+  representative: {
+    fullName: string;
+    position: string;
+    nationalId: string;
+    phone: string;
+    email: string;
+    appointmentDate: string;
+  };
+  bankAccount: {
+    bankName: string;
+    branch: string;
+    accountName: string;
+    accountNumber: string;
+    currency: string;
+    swiftCode?: string;
+  };
   documents: { documentType: string; fileName: string; uploadId?: string }[];
 }) {
-  if (input.owners.length < 1) {
-    throw errors.unprocessable('OWNERS_REQUIRED', 'Record at least one owner.');
-  }
-  if (input.management.length < 1) {
-    throw errors.unprocessable('MANAGEMENT_REQUIRED', 'Record at least one manager.');
-  }
-  if (input.signatories.length < 1) {
-    throw errors.unprocessable('SIGNATORY_REQUIRED', 'Record at least one authorized signatory.');
-  }
-  if (input.documents.length < 1) {
-    throw errors.unprocessable('DOCUMENTS_REQUIRED', 'Attach at least one licensing or registration document.');
-  }
-  const ownershipTotal = input.owners.reduce((sum, owner) => sum + owner.ownershipPct, 0);
-  if (input.owners.some((owner) => owner.ownershipPct <= 0 || owner.ownershipPct > 100) || ownershipTotal > 100) {
-    throw errors.unprocessable('OWNERSHIP_OUT_OF_RANGE', 'Each ownership share must be between 0 and 100 percent, and the total cannot exceed 100.');
-  }
   if (input.documents.some((document) => !PUBLIC_DOCUMENTS.has(document.documentType))) {
     throw errors.unprocessable('DOCUMENT_TYPE_INVALID', 'One of the documents uses an unknown type.');
+  }
+  const attached = new Set(input.documents.map((document) => document.documentType));
+  const missing = REQUIRED_PUBLIC_DOCUMENTS.filter((type) => !attached.has(type));
+  if (missing.length > 0) {
+    throw errors.unprocessable('DOCUMENTS_REQUIRED', 'Attach the registration certificate, operating license, authorization letter, identity document, and bank confirmation letter.');
   }
 
   const membership = input.rupsaMemberId
@@ -709,6 +822,7 @@ export async function submitPublicApplication(input: {
   })));
 
   const publicId = await nextPublicId('SCH');
+  const representativeId = await nextPublicId('REP');
   let school;
   try {
     school = await prisma.school.create({
@@ -718,45 +832,56 @@ export async function submitPublicApplication(input: {
         membershipApplicationId: membership?.membershipApplicationId,
         schoolName: input.schoolName,
         registrationNumber: input.registrationNumber,
+        schoolType: input.schoolType,
+        ownershipType: input.ownershipType,
+        dateEstablished: new Date(input.dateEstablished),
+        operatingStatus: input.operatingStatus,
+        studentCount: input.studentCount,
+        teacherCount: input.teacherCount,
+        staffCount: input.staffCount,
         taxIdentificationNumber: input.taxIdentificationNumber,
+        registrationCertificateNumber: input.registrationCertificateNumber,
+        registrationDate: new Date(input.registrationDate),
+        registrationAuthority: input.registrationAuthority,
+        licenseNumber: input.licenseNumber,
+        licenseExpiryDate: new Date(input.licenseExpiryDate),
+        legalStatus: input.legalStatus,
         phone: input.phone,
+        alternativePhone: input.alternativePhone,
         email: input.email.trim(),
+        website: input.website,
+        emergencyContact: input.emergencyContact,
         province: input.address.province,
         district: input.address.district,
         sector: input.address.sector,
+        cell: input.address.cell,
+        village: input.address.village,
+        physicalAddress: input.address.physicalAddress,
+        gpsCoordinates: input.address.gpsCoordinates,
+        postalAddress: input.address.postalAddress,
         status: SchoolStatus.SUBMITTED,
         membershipStatus: membership?.membershipStatus ?? MembershipStatus.UNVERIFIED,
-        ownerships: {
-          create: input.owners.map((owner) => ({
-            ownerName: owner.ownerName,
-            ownershipPct: owner.ownershipPct,
-            nationalId: owner.nationalId,
-          })),
-        },
+        reviewStatus: RegistrationReviewStatus.PENDING,
         representatives: {
-          create: [
-            ...input.management.map((person) => ({
-              fullName: person.fullName,
-              title: person.title,
-              phone: person.phone,
-              email: person.email,
-              authorized: false,
-            })),
-            ...input.signatories.map((person) => ({
-              fullName: person.fullName,
-              title: person.title,
-              phone: person.phone,
-              email: person.email,
-              authorized: true,
-            })),
-          ],
+          create: {
+            publicId: representativeId,
+            fullName: input.representative.fullName,
+            title: input.representative.position,
+            nationalId: input.representative.nationalId,
+            phone: input.representative.phone,
+            email: input.representative.email,
+            appointmentDate: new Date(input.representative.appointmentDate),
+            authorized: true,
+          },
         },
         bankAccounts: {
           create: {
             bankName: input.bankAccount.bankName,
+            branch: input.bankAccount.branch,
             accountName: input.bankAccount.accountName,
             accountNumber: input.bankAccount.accountNumber,
-            currency: input.bankAccount.currency ?? 'RWF',
+            currency: input.bankAccount.currency,
+            swiftCode: input.bankAccount.swiftCode,
             isPrimary: true,
           },
         },
@@ -851,8 +976,67 @@ export async function publicApplicationStatus(schoolId: string, email: string) {
     schoolName: school.schoolName,
     email: school.email,
     status: school.status,
+    reviewStatus: school.reviewStatus,
     membershipStatus: school.membershipStatus,
     membershipReference: school.rupsaMemberId,
     kybStatus: school.kybStatus,
   };
+}
+
+export async function recordRegistrationReview(schoolId: string, input: {
+  status: RegistrationReviewStatus;
+  registrationVerified: boolean;
+  legalDocumentsVerified: boolean;
+  representativeVerified: boolean;
+  addressVerified: boolean;
+  bankAccountVerified: boolean;
+  documentsComplete: boolean;
+}, actorId?: string) {
+  const school = await findSchool(schoolId);
+  const complete = input.registrationVerified
+    && input.legalDocumentsVerified
+    && input.representativeVerified
+    && input.addressVerified
+    && input.bankAccountVerified
+    && input.documentsComplete;
+  if (input.status === RegistrationReviewStatus.VERIFIED && !complete) {
+    throw errors.unprocessable('CHECKLIST_INCOMPLETE', 'Mark every checklist item before this registration can be verified.');
+  }
+  const reviewer = actorId ? await prisma.user.findUnique({ where: { id: actorId } }) : null;
+  await prisma.$transaction(async (tx) => {
+    await tx.schoolBankAccount.updateMany({
+      where: { schoolId: school.id, isPrimary: true },
+      data: input.bankAccountVerified
+        ? {
+          accountVerified: true,
+          verifiedBy: reviewer?.fullName ?? 'UPSA reviewer',
+          verificationDate: new Date(),
+        }
+        : {
+          accountVerified: false,
+          verifiedBy: null,
+          verificationDate: null,
+        },
+    });
+    await tx.school.update({
+      where: { id: school.id },
+      data: {
+        reviewStatus: input.status,
+        registrationVerified: input.registrationVerified,
+        legalDocumentsVerified: input.legalDocumentsVerified,
+        representativeVerified: input.representativeVerified,
+        addressVerified: input.addressVerified,
+        bankAccountVerified: input.bankAccountVerified,
+        documentsComplete: input.documentsComplete,
+      },
+    });
+  });
+  await writeAudit({
+    actorId,
+    action: 'school.registration.review',
+    entityType: 'School',
+    entityId: school.publicId,
+    metadata: { status: input.status },
+  });
+  return getRegistration(school.publicId);
 }

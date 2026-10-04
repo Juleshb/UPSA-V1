@@ -10,7 +10,7 @@ export function SiteFooter() {
         <div className="footer-brand">
           <img src="/rupsa-next-logo-reversed.svg" alt="UPSA Next Payment" />
           <p>
-            Official digital platform concept of the Rwanda Union of Private
+            Official digital platform concept of the Universor of Private
             Schools Association — connecting schools, families and licensed
             financial institutions.
           </p>
@@ -25,10 +25,8 @@ export function SiteFooter() {
         ))}
         <div>
           <b>Contact</b>
+          <Link to="/services">Online services</Link>
           <Link to="/developers">API sandbox</Link>
-          <Link to="/register">Register a school</Link>
-          <Link to="/membership">Become a UPSA member</Link>
-          <Link to="/contact">Request a briefing</Link>
           <span>Kigali, Rwanda</span>
           <span>Currency: RWF</span>
         </div>

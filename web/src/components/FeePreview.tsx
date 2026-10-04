@@ -16,7 +16,7 @@ export function FeePreview() {
   return (
     <div className="fee-preview">
       <div className="fee-copy">
-        <div className="section-label">05 / Planning view</div>
+        <p className="assoc-kicker"><span /> Planning view</p>
         <h2>Illustrative collections at school scale.</h2>
         <p>
           Adjust enrolment and a typical term fee to see an annual figure in

@@ -39,13 +39,18 @@ export type NavLink = {
 
 export const APP_NAV: NavLink[] = [
   { to: '/app', label: 'Home', icon: 'dash' },
+  { to: '/app/registration', label: 'Registration', icon: 'user', permission: 'school.read' },
   { to: '/app/schools', label: 'Schools', icon: 'school', permission: 'school.read' },
   { to: '/app/membership', label: 'Membership', icon: 'shield', permission: 'school.read' },
   { to: '/app/students', label: 'Students', icon: 'family', permission: 'student.read' },
   { to: '/app/invoices', label: 'Invoices', icon: 'ledger', permission: 'invoice.read' },
   { to: '/app/payments', label: 'Payments', icon: 'pay', permission: 'payment.read' },
+  { to: '/app/donations', label: 'Donations', icon: 'pay', permission: 'donation.read' },
+  { to: '/app/investments', label: 'Investments', icon: 'ledger', permission: 'investment.read' },
+  { to: '/app/accounts', label: 'Accounts', icon: 'user', permission: 'account.read' },
+  { to: '/app/literacy', label: 'Training', icon: 'report', permission: 'literacy.read' },
   { to: '/app/loans', label: 'Financing', icon: 'loan', permission: 'loan.read' },
-  { to: '/app/guarantees', label: 'Guarantees', icon: 'shield', permission: 'guarantee.read' },
+  { to: '/app/escrow', label: '40/60 Escrow', icon: 'shield', permission: 'guarantee.read' },
   { to: '/app/reports', label: 'Reports', icon: 'report', permission: 'report.read' },
 ]
 

@@ -107,13 +107,13 @@ export function MembershipCertificate(details: CertificateDetails) {
           <div className="certificate-outer">
             <div className="certificate-frame">
               <img className="certificate-logo" src="/rupsa-next-logo.png" alt="UPSA Next Payment" />
-              <p className="certificate-org">Rwanda Union of Private Schools Association</p>
+              <p className="certificate-org">Universor of Private Schools Association</p>
               <p className="certificate-verified">Verified membership</p>
               <h2>Certificate of Membership</h2>
               <p className="certificate-intro">This certifies that</p>
               <p className="certificate-school">{details.schoolName}</p>
               <p className="certificate-copy">
-                is a verified member of the Rwanda Union of Private Schools Association.
+                is a verified member of the Universor of Private Schools Association.
                 Scan the code to check that this certificate is genuine.
               </p>
               <dl>

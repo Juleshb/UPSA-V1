@@ -31,8 +31,6 @@ export const navMenus: NavMenu[] = [
     to: '/solutions/schools',
     items: [
       { to: '/solutions/schools', label: 'Schools', hint: 'Collections, ledgers and dashboards' },
-      { to: '/register', label: 'Register a school', hint: 'Public member application' },
-      { to: '/membership', label: 'Become a UPSA member', hint: 'Association membership request' },
       { to: '/solutions/parents', label: 'Parents & guardians', hint: 'Balances, plans and receipts' },
       { to: '/solutions/partners', label: 'Banks & MFIs', hint: 'Verified data and portfolio tools' },
     ],

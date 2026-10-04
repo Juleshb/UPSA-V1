@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MembershipCertificate } from '../../components/MembershipCertificate'
-import { api, type MembershipApplicationRow } from '../../platform/api'
+import { api, openProtectedFile, type MembershipApplicationRow } from '../../platform/api'
+import { documentLabel } from './membership/catalog'
+import { money } from '../../platform/format'
 import { useAuth } from '../../platform/AuthContext'
 import { Banner, matchesQuery, Modal, PageHeading, Panel, RowActions, SearchField, Stat, StatusPill, Table } from '../../platform/ui'
 import { useLoad } from '../../platform/useLoad'
@@ -15,6 +17,7 @@ export function MembershipBoard() {
   const [error, setError] = useState('')
   const [busyId, setBusyId] = useState('')
   const [certificate, setCertificate] = useState<MembershipApplicationRow | null>(null)
+  const [details, setDetails] = useState<MembershipApplicationRow | null>(null)
   const items = applications.data?.items ?? []
   const visible = items.filter((item) =>
     matchesQuery(query, item.applicationId, item.schoolName, item.contactName, item.email, item.address.district, item.status),
@@ -34,7 +37,7 @@ export function MembershipBoard() {
   }
 
   return (
-    <div className="app-page">
+    <>
       <PageHeading
         kicker="Membership"
         title="UPSA membership review"
@@ -65,6 +68,8 @@ export function MembershipBoard() {
               `${item.address.district}, ${item.address.province}`,
               <StatusPill key={item.applicationId} value={item.status === 'SUBMITTED' ? 'IN_REVIEW' : item.status} />,
               <RowActions key={`${item.applicationId}-actions`}>
+                <button className="app-text-btn" type="button" onClick={() => setDetails(item)}>Details</button>
+                {item.memberId && <Link to={`/app/membership/members/${item.memberId}`}>Membership file</Link>}
                 {item.status === 'CONFIRMED' && (
                   <button className="app-text-btn" type="button" onClick={() => setCertificate(item)}>Certificate</button>
                 )}
@@ -79,6 +84,35 @@ export function MembershipBoard() {
           />
         )}
       </Panel>
+      <Modal open={Boolean(details)} title={details?.schoolName ?? 'Membership request'} onClose={() => setDetails(null)} size="wide">
+        {details && (
+          <>
+            <div className="lend-facts">
+              <p><b>Reference</b> {details.applicationId}</p>
+              <p><b>Category</b> {details.categoryCode ?? '—'}</p>
+              <p><b>Registration</b> {details.registrationNumber ?? '—'}</p>
+              <p><b>Certificate</b> {details.registrationCertificateNumber ?? '—'}</p>
+              <p><b>Representative</b> {details.contactName}, {details.title}</p>
+              <p><b>Telephone</b> {details.phone}</p>
+              <p><b>Email</b> {details.email}</p>
+              <p><b>Location</b> {[details.address.cell, details.address.sector, details.address.district, details.address.province].filter(Boolean).join(', ')}</p>
+              <p><b>Address</b> {details.address.physicalAddress ?? '—'}</p>
+              <p><b>Bank</b> {[details.bankName, details.bankAccountNumber].filter(Boolean).join(' · ') || '—'}</p>
+              <p><b>Fee</b> {details.payment ? `${money(details.payment.amount, details.payment.currency)} · ${details.payment.status}` : '—'}</p>
+            </div>
+            <Table
+              columns={['Document', 'File']}
+              empty="No document was attached."
+              rows={(details.documents ?? []).map((item) => [
+                documentLabel(item.documentType),
+                item.hasFile
+                  ? <button key={item.documentId} className="app-text-btn" type="button" onClick={() => void openProtectedFile(`/membership-applications/${encodeURIComponent(details.applicationId)}/documents/${encodeURIComponent(item.documentId)}/file`)}>{item.fileName}</button>
+                  : item.fileName,
+              ])}
+            />
+          </>
+        )}
+      </Modal>
       <Modal open={Boolean(certificate)} title="Membership certificate" onClose={() => setCertificate(null)} size="wide">
         {certificate && (
           <MembershipCertificate
@@ -94,6 +128,6 @@ export function MembershipBoard() {
           />
         )}
       </Modal>
-    </div>
+    </>
   )
 }

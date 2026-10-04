@@ -16,6 +16,14 @@ export const PERMISSIONS = [
   'consent.read',
   'consent.write',
   'report.read',
+  'donation.read',
+  'donation.write',
+  'investment.read',
+  'investment.write',
+  'account.read',
+  'account.write',
+  'literacy.read',
+  'literacy.write',
   'admin.write',
 ] as const;
 
@@ -40,6 +48,14 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'consent.write',
     'loan.read',
     'guarantee.read',
+    'donation.read',
+    'donation.write',
+    'investment.read',
+    'investment.write',
+    'account.read',
+    'account.write',
+    'literacy.read',
+    'literacy.write',
   ],
   PARENT: [
     'student.read',
@@ -48,6 +64,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'payment.write',
     'consent.read',
     'consent.write',
+    'literacy.read',
   ],
   BANK_USER: [
     'school.read',
@@ -65,7 +82,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'consent.read',
     'report.read',
   ],
-  PSP_USER: ['payment.read', 'payment.write', 'invoice.read'],
+  PSP_USER: ['payment.read', 'payment.write', 'invoice.read', 'donation.read', 'donation.write', 'investment.read', 'investment.write', 'account.read', 'account.write', 'literacy.read', 'literacy.write'],
   AUDITOR: [
     'school.read',
     'student.read',
@@ -75,6 +92,10 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'guarantee.read',
     'consent.read',
     'report.read',
+    'donation.read',
+    'investment.read',
+    'account.read',
+    'literacy.read',
   ],
 };
 

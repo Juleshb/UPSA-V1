@@ -29,14 +29,26 @@ const NEXT_LABEL: Record<string, string> = {
 }
 
 const DOCUMENTS = [
-  ['LICENSE', 'Operating licence'],
   ['REGISTRATION_CERTIFICATE', 'Registration certificate'],
-  ['TIN_CERTIFICATE', 'TIN certificate'],
+  ['LICENSE', 'Operating license'],
+  ['TIN_CERTIFICATE', 'Tax certificate'],
+  ['OWNERSHIP_DOCUMENTS', 'Ownership documents'],
+  ['AUTHORIZATION_LETTER', 'Authorization letter'],
+  ['ID_DOCUMENT', 'ID document'],
+  ['BANK_LETTER', 'Bank confirmation letter'],
   ['RUPSA_MEMBERSHIP', 'UPSA membership letter'],
   ['OWNER_IDENTITY', 'Owner identity'],
-  ['BANK_LETTER', 'Bank confirmation'],
-  ['OTHER', 'Other'],
+  ['OTHER', 'Other legal documents'],
 ]
+
+const CHECKS = [
+  ['registrationVerified', 'School registration verified'],
+  ['legalDocumentsVerified', 'Legal documents verified'],
+  ['representativeVerified', 'Representative verified'],
+  ['addressVerified', 'Address verified'],
+  ['bankAccountVerified', 'Bank account verified'],
+  ['documentsComplete', 'Required documents complete'],
+] as const
 
 const EDITABLE = ['APPLICATION', 'SUBMITTED', 'DOCUMENT_REVIEW', 'PENDING_VERIFICATION', 'VERIFICATION']
 
@@ -155,6 +167,21 @@ export function SchoolDossier() {
     })
   }
 
+  function onVerification(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+    const checked = (name: string) => form.get(name) === 'on'
+    void run(() => api.schools.verification(schoolId, {
+      status: String(form.get('status')) as 'PENDING' | 'VERIFIED' | 'MORE_INFORMATION_REQUIRED' | 'REJECTED',
+      registrationVerified: checked('registrationVerified'),
+      legalDocumentsVerified: checked('legalDocumentsVerified'),
+      representativeVerified: checked('representativeVerified'),
+      addressVerified: checked('addressVerified'),
+      bankAccountVerified: checked('bankAccountVerified'),
+      documentsComplete: checked('documentsComplete'),
+    }))
+  }
+
   function onMembership(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
@@ -206,6 +233,7 @@ export function SchoolDossier() {
           onBank={onBank}
           onDocument={onDocument}
           onMembership={onMembership}
+          onVerification={onVerification}
           onKyc={onKyc}
           onRemove={(action) => void run(action)}
           onAdvance={(status) => setConfirm(status)}
@@ -244,6 +272,7 @@ function DossierBody({
   onBank,
   onDocument,
   onMembership,
+  onVerification,
   onKyc,
   onRemove,
   onAdvance,
@@ -260,6 +289,7 @@ function DossierBody({
   onBank: (event: FormEvent<HTMLFormElement>) => void
   onDocument: (event: FormEvent<HTMLFormElement>) => void
   onMembership: (event: FormEvent<HTMLFormElement>) => void
+  onVerification: (event: FormEvent<HTMLFormElement>) => void
   onKyc: (event: FormEvent<HTMLFormElement>) => void
   onRemove: (action: () => Promise<unknown>) => void
   onAdvance: (status: string) => void
@@ -278,6 +308,7 @@ function DossierBody({
         </ol>
         <div className="app-inline-actions">
           <StatusPill value={school.status} />
+          <StatusPill value={school.reviewStatus ?? 'PENDING'} />
           <StatusPill value={school.membershipStatus ?? 'UNVERIFIED'} />
           <StatusPill value={school.kybStatus} />
           {canSubmit && <button className="button primary" type="button" disabled={busy} onClick={() => onAdvance('SUBMITTED')}>Submit application</button>}
@@ -299,6 +330,27 @@ function DossierBody({
           <Field label="Registration number">
             <input value={school.registrationNumber ?? ''} disabled />
           </Field>
+          <Field label="School type">
+            <input value={pretty(school.schoolType)} disabled />
+          </Field>
+          <Field label="Ownership type">
+            <input value={pretty(school.ownershipType)} disabled />
+          </Field>
+          <Field label="Date established">
+            <input value={school.dateEstablished ?? ''} disabled />
+          </Field>
+          <Field label="School status">
+            <input value={pretty(school.operatingStatus)} disabled />
+          </Field>
+          <Field label="Students">
+            <input value={school.studentCount ?? ''} disabled />
+          </Field>
+          <Field label="Teachers">
+            <input value={school.teacherCount ?? ''} disabled />
+          </Field>
+          <Field label="Staff">
+            <input value={school.staffCount ?? ''} disabled />
+          </Field>
           <Field label="Tax identification number">
             <input name="taxIdentificationNumber" defaultValue={school.taxIdentificationNumber ?? ''} disabled={!editable} />
           </Field>
@@ -316,6 +368,15 @@ function DossierBody({
           <Field label="Email">
             <input name="email" type="email" required defaultValue={school.email} disabled={!editable} />
           </Field>
+          <Field label="Alternative telephone">
+            <input value={school.alternativePhone ?? ''} disabled />
+          </Field>
+          <Field label="Website">
+            <input value={school.website ?? ''} disabled />
+          </Field>
+          <Field label="Emergency contact" span="full">
+            <input value={school.emergencyContact ?? ''} disabled />
+          </Field>
         </FieldGroup>
         <FieldGroup title="School location">
           <RwandaAddress
@@ -323,6 +384,41 @@ function DossierBody({
             defaultDistrict={school.address.district}
             defaultSector={school.address.sector ?? ''}
           />
+          <Field label="Cell">
+            <input value={school.address.cell ?? ''} disabled />
+          </Field>
+          <Field label="Village">
+            <input value={school.address.village ?? ''} disabled />
+          </Field>
+          <Field label="Physical address" span="full">
+            <input value={school.address.physicalAddress ?? ''} disabled />
+          </Field>
+          <Field label="GPS coordinates">
+            <input value={school.address.gpsCoordinates ?? ''} disabled />
+          </Field>
+          <Field label="Postal address">
+            <input value={school.address.postalAddress ?? ''} disabled />
+          </Field>
+        </FieldGroup>
+        <FieldGroup title="Legal information">
+          <Field label="Registration certificate number">
+            <input value={school.registrationCertificateNumber ?? ''} disabled />
+          </Field>
+          <Field label="Registration date">
+            <input value={school.registrationDate ?? ''} disabled />
+          </Field>
+          <Field label="Registration authority">
+            <input value={school.registrationAuthority ?? ''} disabled />
+          </Field>
+          <Field label="License number">
+            <input value={school.licenseNumber ?? ''} disabled />
+          </Field>
+          <Field label="License expiry">
+            <input value={school.licenseExpiryDate ?? ''} disabled />
+          </Field>
+          <Field label="Legal status">
+            <input value={pretty(school.legalStatus)} disabled />
+          </Field>
         </FieldGroup>
         {editable && <div className="app-field full"><button className="button primary" type="submit" disabled={busy}>Save profile</button></div>}
       </form>
@@ -350,12 +446,12 @@ function DossierBody({
         </Panel>
         <Panel icon="user" title="Bank account">
           <Table
-            columns={['Bank', 'Account', 'Currency', '']}
+            columns={['Bank', 'Account', 'Verification', '']}
             empty="No collection account recorded."
             rows={data.bankAccounts.map((row) => [
-              row.bankName,
-              `${row.accountName} · ${row.accountNumber}${row.isPrimary ? ' · Primary' : ''}`,
-              row.currency,
+              `${row.bankName}${row.branch ? ` · ${row.branch}` : ''}`,
+              `${row.accountName} · ${row.accountNumber} · ${row.currency}${row.swiftCode ? ` · ${row.swiftCode}` : ''}${row.isPrimary ? ' · Primary' : ''}`,
+              row.accountVerified ? `Verified by ${row.verifiedBy ?? 'UPSA'}${row.verificationDate ? ` on ${row.verificationDate}` : ''}` : 'Not verified',
               editable ? <RowActions key={row.id}><button type="button" className="danger" onClick={() => onRemove(() => api.schools.removeBank(school.schoolId, row.id))}>Remove</button></RowActions> : '—',
             ])}
           />
@@ -411,6 +507,34 @@ function DossierBody({
       </Panel>
 
       <div className="app-grid">
+        <Panel icon="report" title="Registration verification">
+          <p className="app-note">Mark the checklist, then set the registration to pending, verified, more information required, or rejected.</p>
+          {reviewer ? (
+            <form className="app-form" key={`${school.reviewStatus}-${JSON.stringify(school.checklist)}`} onSubmit={onVerification}>
+              {CHECKS.map(([name, label]) => (
+                <Field key={name} label={label}>
+                  <input name={name} type="checkbox" defaultChecked={school.checklist?.[name] ?? false} />
+                </Field>
+              ))}
+              <Field label="Status">
+                <select name="status" defaultValue={school.reviewStatus ?? 'PENDING'}>
+                  <option value="PENDING">Pending</option>
+                  <option value="VERIFIED">Verified</option>
+                  <option value="MORE_INFORMATION_REQUIRED">More information required</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+              </Field>
+              <button className="button secondary" type="submit" disabled={busy}>Save verification</button>
+            </form>
+          ) : (
+            <dl className="app-dl">
+              {CHECKS.map(([name, label]) => (
+                <div key={name}><dt>{label}</dt><dd>{school.checklist?.[name] ? 'Yes' : 'No'}</dd></div>
+              ))}
+              <div><dt>Status</dt><dd><StatusPill value={school.reviewStatus ?? 'PENDING'} /></dd></div>
+            </dl>
+          )}
+        </Panel>
         <Panel icon="shield" title="UPSA membership verification">
           <dl className="app-dl">
             <div><dt>Membership reference</dt><dd>{school.rupsaMemberId ?? '—'}</dd></div>
@@ -482,12 +606,12 @@ function PeoplePanel({
   return (
     <Panel icon="user" title={title}>
       <Table
-        columns={['Name', 'Title', 'Contact', '']}
+        columns={['Name', 'Position', 'Identity', '']}
         empty={`No ${title.toLowerCase()} recorded.`}
         rows={people.map((row) => [
-          row.fullName,
-          row.title,
-          row.email ?? row.phone ?? '—',
+          `${row.fullName}${row.representativeId ? ` · ${row.representativeId}` : ''}`,
+          `${row.title}${row.appointmentDate ? ` · appointed ${row.appointmentDate}` : ''}`,
+          [row.nationalId, row.email ?? row.phone].filter(Boolean).join(' · ') || '—',
           editable ? <RowActions key={row.id}><button type="button" className="danger" onClick={() => onRemove(() => api.schools.removePerson(schoolId, row.id))}>Remove</button></RowActions> : '—',
         ])}
       />
@@ -506,4 +630,8 @@ function PeoplePanel({
 
 function labelFor(value: string) {
   return DOCUMENTS.find(([code]) => code === value)?.[1] ?? value.replaceAll('_', ' ')
+}
+
+function pretty(value: string | null | undefined) {
+  return value ? value.replaceAll('_', ' ') : ''
 }

@@ -130,7 +130,7 @@ function letter(input: {
             </tr>
             <tr>
               <td style="padding:8px 32px 32px;">
-                <p style="margin:18px 0 0;padding-top:18px;border-top:1px solid #e4eeeb;font-family:${font};font-size:14px;line-height:1.6;color:#334e59;">With regards,<br><b style="color:#092b3c;">UPSA Next Payment</b><br>Rwanda Union of Private Schools Association<br>Kigali, Rwanda</p>
+                <p style="margin:18px 0 0;padding-top:18px;border-top:1px solid #e4eeeb;font-family:${font};font-size:14px;line-height:1.6;color:#334e59;">With regards,<br><b style="color:#092b3c;">UPSA Next Payment</b><br>Universor of Private Schools Association<br>Kigali, Rwanda</p>
               </td>
             </tr>
           </table>
@@ -154,7 +154,7 @@ function letter(input: {
     '',
     'With regards,',
     'UPSA Next Payment',
-    'Rwanda Union of Private Schools Association',
+    'Universor of Private Schools Association',
     'Kigali, Rwanda',
   ].filter((line) => line !== undefined).join('\n').replace(/\n{3,}/g, '\n\n');
   return { html, text };

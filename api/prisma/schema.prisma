@@ -49,6 +49,7 @@ model User {
   auditLogs         AuditLog[]
   accessLogs        AccessLog[]
   notifications     Notification[]
+  openedAccounts    OpenedAccount[]
 }
 
 model RefreshToken {
@@ -79,6 +80,46 @@ enum SchoolStatus {
   INACTIVE
 }
 
+enum SchoolType {
+  NURSERY
+  PRIMARY
+  SECONDARY
+  TVET
+  SPECIAL_EDUCATION
+  COMBINED
+  OTHER
+}
+
+enum OwnershipType {
+  PRIVATE
+  PUBLIC
+  GOVERNMENT_AIDED
+  FAITH_BASED
+  COMMUNITY
+  OTHER
+}
+
+enum OperatingStatus {
+  OPERATING
+  TEMPORARILY_CLOSED
+  CLOSED
+}
+
+enum LegalStatus {
+  REGISTERED
+  PROVISIONALLY_REGISTERED
+  LICENSED
+  SUSPENDED
+  OTHER
+}
+
+enum RegistrationReviewStatus {
+  PENDING
+  VERIFIED
+  MORE_INFORMATION_REQUIRED
+  REJECTED
+}
+
 enum KybStatus {
   PENDING
   IN_REVIEW
@@ -99,15 +140,43 @@ model School {
   rupsaMemberId           String?      @unique
   schoolName              String
   registrationNumber      String       @unique
+  schoolType              SchoolType?
+  ownershipType           OwnershipType?
+  dateEstablished         DateTime?
+  operatingStatus         OperatingStatus?
+  studentCount            Int?
+  teacherCount            Int?
+  staffCount              Int?
   taxIdentificationNumber String?
+  registrationCertificateNumber String?
+  registrationDate        DateTime?
+  registrationAuthority   String?
+  licenseNumber           String?
+  licenseExpiryDate       DateTime?
+  legalStatus             LegalStatus?
   phone                   String
+  alternativePhone        String?
   email                   String
+  website                 String?
+  emergencyContact        String?
   province                String
   district                String
   sector                  String?
+  cell                    String?
+  village                 String?
+  physicalAddress         String?
+  gpsCoordinates          String?
+  postalAddress           String?
   status                  SchoolStatus     @default(APPLICATION)
   kybStatus               KybStatus        @default(PENDING)
   membershipStatus        MembershipStatus @default(UNVERIFIED)
+  reviewStatus            RegistrationReviewStatus @default(PENDING)
+  registrationVerified    Boolean          @default(false)
+  legalDocumentsVerified  Boolean          @default(false)
+  representativeVerified  Boolean          @default(false)
+  addressVerified         Boolean          @default(false)
+  bankAccountVerified     Boolean          @default(false)
+  documentsComplete       Boolean          @default(false)
   membershipApplicationId String?          @unique
   createdAt               DateTime     @default(now())
   updatedAt               DateTime     @updatedAt
@@ -125,6 +194,18 @@ model School {
   guarantees         Guarantee[]
   financialProfiles  FinancialProfile[]
   kycRecords         KycRecord[]
+  registrations      Registration[]
+  investmentApplications InvestmentApplication[]
+  investmentPositions    InvestmentPosition[]
+  openedAccounts         OpenedAccount[]
+  literacyLearners       LiteracyLearner[]
+  escrowGroups           EscrowGroup[]
+  escrowMemberships      EscrowGroupMember[]
+  escrowAccounts         EscrowAccount[]
+  collateralAssets       CollateralAsset[]
+  securityApplications   SecurityApplication[]
+  securityGuarantees     SecurityGuarantee[]
+  memberFile             Member?
 
   @@index([status])
 }
@@ -141,14 +222,17 @@ model SchoolUser {
 }
 
 model SchoolRepresentative {
-  id         String  @id @default(cuid())
-  schoolId   String
-  fullName   String
-  title      String
-  phone      String?
-  email      String?
-  authorized Boolean @default(true)
-  school     School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  id              String    @id @default(cuid())
+  publicId        String?   @unique
+  schoolId        String
+  fullName        String
+  title           String
+  nationalId      String?
+  phone           String?
+  email           String?
+  appointmentDate DateTime?
+  authorized      Boolean   @default(true)
+  school          School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 }
 
 model SchoolOwnership {
@@ -161,14 +245,19 @@ model SchoolOwnership {
 }
 
 model SchoolBankAccount {
-  id            String  @id @default(cuid())
-  schoolId      String
-  bankName      String
-  accountName   String
-  accountNumber String
-  currency      String  @default("RWF")
-  isPrimary     Boolean @default(false)
-  school        School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  id               String    @id @default(cuid())
+  schoolId         String
+  bankName         String
+  branch           String?
+  accountName      String
+  accountNumber    String
+  currency         String    @default("RWF")
+  swiftCode        String?
+  isPrimary        Boolean   @default(false)
+  accountVerified  Boolean   @default(false)
+  verifiedBy       String?
+  verificationDate DateTime?
+  school           School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 }
 
 model SchoolDocument {
@@ -199,50 +288,229 @@ model Guardian {
   notifyChannel    String         @default("IN_APP")
   createdAt        DateTime       @default(now())
   updatedAt  DateTime @updatedAt
-  user       User?    @relation(fields: [userId], references: [id])
-  students   StudentGuardian[]
+  user         User?    @relation(fields: [userId], references: [id])
+  students     StudentGuardian[]
+  registration Registration?
+  openedAccounts OpenedAccount[]
+  literacyLearners LiteracyLearner[]
+}
+
+enum StudentGender {
+  FEMALE
+  MALE
+}
+
+enum StudentStatus {
+  APPLICANT
+  ACTIVE
+  TRANSFERRED
+  GRADUATED
+  SUSPENDED
+  WITHDRAWN
+  INACTIVE
+}
+
+enum DocumentVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
 }
 
 model Student {
-  id                String   @id @default(cuid())
-  publicId          String   @unique
+  id                String        @id @default(cuid())
+  publicId          String        @unique
   schoolId          String
   studentExternalId String
   studentName       String
+  firstName         String?
+  middleName        String?
+  lastName          String?
+  dateOfBirth       DateTime?
+  gender            StudentGender?
+  nationality       String?
+  photoStoredName   String?
+  previousSchool    String?
+  admissionDate     DateTime?
   academicYear      String
   classLevel        String
+  stream            String?
+  grade             String?
   feeCategory       String?
-  status            String   @default("ACTIVE")
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  school            School   @relation(fields: [schoolId], references: [id])
+  province          String?
+  district          String?
+  sector            String?
+  cell              String?
+  village           String?
+  physicalAddress   String?
+  telephone         String?
+  emergencyContact  String?
+  status            StudentStatus @default(ACTIVE)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  school            School        @relation(fields: [schoolId], references: [id])
   guardians         StudentGuardian[]
+  documents         StudentDocument[]
   invoices          Invoice[]
   financialAccount  StudentFinancialAccount?
+  openedAccounts    OpenedAccount[]
+  literacyLearners  LiteracyLearner[]
 
   @@unique([schoolId, studentExternalId])
   @@index([schoolId])
 }
 
 model StudentGuardian {
-  studentId    String
-  guardianId   String
-  relationship String  @default("GUARDIAN")
-  isPrimary    Boolean @default(true)
-  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  guardian     Guardian @relation(fields: [guardianId], references: [id], onDelete: Cascade)
+  studentId                  String
+  guardianId                 String
+  relationship               String  @default("Guardian")
+  isPrimary                  Boolean @default(false)
+  isEmergencyContact         Boolean @default(false)
+  financialResponsibility    Boolean @default(false)
+  communicationAuthorization Boolean @default(false)
+  paymentAuthorization       Boolean @default(false)
+  student                    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  guardian                   Guardian @relation(fields: [guardianId], references: [id], onDelete: Cascade)
 
   @@id([studentId, guardianId])
 }
 
+model StudentDocument {
+  id                 String                     @id @default(cuid())
+  studentId          String
+  documentType       String
+  documentNumber     String?
+  issueDate          DateTime?
+  expiryDate         DateTime?
+  fileRef            String
+  storedName         String?
+  verificationStatus DocumentVerificationStatus @default(PENDING)
+  uploadedAt         DateTime                   @default(now())
+  student            Student                    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+}
+
 model StudentFinancialAccount {
-  id          String  @id @default(cuid())
-  studentId   String  @unique
-  currency    String  @default("RWF")
-  totalBilled Decimal @default(0) @db.Decimal(18, 2)
-  totalPaid   Decimal @default(0) @db.Decimal(18, 2)
-  outstanding Decimal @default(0) @db.Decimal(18, 2)
-  student     Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  id                String   @id @default(cuid())
+  studentId         String   @unique
+  currency          String   @default("RWF")
+  feeStructureLabel String?
+  scholarship       String?
+  discountAmount    Decimal? @db.Decimal(18, 2)
+  paymentPlan       String?
+  totalBilled       Decimal  @default(0) @db.Decimal(18, 2)
+  totalPaid         Decimal  @default(0) @db.Decimal(18, 2)
+  outstanding       Decimal  @default(0) @db.Decimal(18, 2)
+  student           Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+enum RegistrationKind {
+  PARENT
+  TEACHER
+  SUPPLIER
+  INVESTOR
+  DONOR
+}
+
+enum RegistrationStatus {
+  DRAFT
+  SUBMITTED
+  DOCUMENT_REVIEW
+  VERIFICATION
+  PENDING_APPROVAL
+  APPROVED
+  ACTIVE
+  MORE_INFORMATION_REQUIRED
+  RESUBMITTED
+  REJECTED
+  SUSPENDED
+  INACTIVE
+  EXPIRED
+  TERMINATED
+}
+
+model Registration {
+  id                String             @id @default(cuid())
+  publicId          String             @unique
+  kind              RegistrationKind
+  status            RegistrationStatus @default(SUBMITTED)
+  displayName       String
+  referenceCode     String?
+  email             String?
+  phone             String?
+  alternativePhone  String?
+  province          String?
+  district          String?
+  sector            String?
+  cell              String?
+  village           String?
+  physicalAddress   String?
+  postalAddress     String?
+  website           String?
+  profile           Json
+  schoolId          String?
+  guardianId        String?            @unique
+  identityVerified  Boolean            @default(false)
+  documentsVerified Boolean            @default(false)
+  contactVerified   Boolean            @default(false)
+  addressVerified   Boolean            @default(false)
+  financialVerified Boolean            @default(false)
+  consentCaptured   Boolean            @default(false)
+  duplicateChecked  Boolean            @default(false)
+  decision          String?
+  approvedBy        String?
+  approvalDate      DateTime?
+  conditions        String?
+  comments          String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  school            School?            @relation(fields: [schoolId], references: [id])
+  guardian          Guardian?          @relation(fields: [guardianId], references: [id])
+  documents         RegistrationDocument[]
+  events            RegistrationEvent[]
+  investmentApplications InvestmentApplication[]
+  investmentPositions    InvestmentPosition[]
+  openedAccounts         OpenedAccount[]
+  literacyLearners       LiteracyLearner[]
+
+  @@index([kind, status])
+  @@index([email])
+}
+
+model RegistrationDocument {
+  id                 String                     @id @default(cuid())
+  registrationId     String
+  documentType       String
+  documentNumber     String?
+  issueDate          DateTime?
+  expiryDate         DateTime?
+  issuingAuthority   String?
+  fileRef            String
+  storedName         String?
+  verificationStatus DocumentVerificationStatus @default(PENDING)
+  verifiedBy         String?
+  verificationDate   DateTime?
+  comments           String?
+  uploadedAt         DateTime                   @default(now())
+  registration       Registration               @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+
+  @@index([registrationId])
+}
+
+model RegistrationEvent {
+  id             String              @id @default(cuid())
+  registrationId String
+  actorId        String?
+  action         String
+  previousStatus RegistrationStatus?
+  newStatus      RegistrationStatus?
+  reason         String?
+  requestId      String?
+  ip             String?
+  createdAt      DateTime            @default(now())
+  registration   Registration        @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+
+  @@index([registrationId])
 }
 
 model FeeStructure {
@@ -551,6 +819,9 @@ model FinancialInstitution {
   loanApplications LoanApplication[]
   guarantees  Guarantee[]
   consents    Consent[]
+  escrowAccounts EscrowAccount[]
+  securityFacilities SecurityFacility[]
+  securityGuarantees SecurityGuarantee[]
 }
 
 model InstitutionUser {
@@ -620,6 +891,18 @@ model LoanApplication {
   assessments              CreditAssessment[]
   loan                     Loan?
   guarantees               Guarantee[]
+  securityApplications     SecurityApplication[]
+  securityGuarantees       SecurityGuarantee[]
+  securityLinks            SecurityLink[]
+  lendingCase              LendingCase?
+  lendingDocuments         LendingDocument[]
+  lendingKyc               LendingKyc[]
+  lendingConsents          LendingConsent[]
+  lendingAssessments       LendingAssessment[]
+  offers                   LoanOffer[]
+  contracts                LoanContract[]
+  lendingCollateral        LendingCollateral[]
+  lendingGuarantees        LendingGuaranteeRequest[]
 
   @@index([schoolId])
   @@index([financialInstitutionId])
@@ -673,6 +956,29 @@ model Loan {
   disbursements          LoanDisbursement[]
   repayments             LoanRepayment[]
   claims                 GuaranteeClaim[]
+  securityClaims         SecurityClaim[]
+  collateralLiens        CollateralLien[]
+  collateralReleases     CollateralRelease[]
+  collateralRealizations CollateralRealization[]
+  collateralEnforcements CollateralEnforcement[]
+  securityRecoveries     SecurityRecovery[]
+  securityLinks          SecurityLink[]
+  securityDefaults       SecurityDefault[]
+  escrowSetOffs          EscrowSetOff[]
+  position               LendingPosition?
+  installments           LendingInstallment[]
+  collections            LendingCollection[]
+  promises               LendingPromise[]
+  recoveries             LendingRecovery[]
+  writeOffs              LendingWriteOff[]
+  restructures           LendingRestructure[]
+  holidays               LendingHoliday[]
+  topUps                 LendingTopUp[]
+  refinances             LendingRefinance[]
+  transfers              LendingTransfer[]
+  adjustments            LendingAdjustment[]
+  refunds                LendingRefund[]
+  settlement             LendingSettlement?
 }
 
 model LoanDisbursement {
@@ -893,6 +1199,30 @@ model MembershipApplication {
   district           String
   sector             String?
   message            String?
+  categoryCode                  String?
+  institutionType               String?
+  dateEstablished               DateTime?
+  studentCount                  Int?
+  staffCount                    Int?
+  cell                          String?
+  village                       String?
+  physicalAddress               String?
+  website                       String?
+  postalAddress                 String?
+  alternativePhone              String?
+  registrationCertificateNumber String?
+  registrationDate              DateTime?
+  taxIdentificationNumber       String?
+  issuingAuthority              String?
+  bankName                      String?
+  bankAccountName               String?
+  bankAccountNumber             String?
+  bankBranch                    String?
+  currency                      String?
+  representativeNationalId      String?
+  representativePhone           String?
+  representativeEmail           String?
+  memberPublicId                String?
   status             String   @default("SUBMITTED")
   reviewNote         String?
   reviewedAt         DateTime?
@@ -901,8 +1231,22 @@ model MembershipApplication {
   verificationCode   String?  @unique
   createdAt          DateTime @default(now())
   school             School?
+  documents          MembershipApplicationDocument[]
 
   @@index([email])
+}
+
+model MembershipApplicationDocument {
+  id            String                @id @default(cuid())
+  publicId      String                @unique
+  applicationId String
+  documentType  String
+  fileName      String
+  storedName    String?
+  createdAt     DateTime              @default(now())
+  application   MembershipApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
 }
 
 model Notification {
@@ -947,4 +1291,3537 @@ model IdempotencyRecord {
 model IdSequence {
   prefix String @id
   value  Int    @default(0)
+}
+
+// ---------------------------------------------------------------------------
+// Donation — donor, campaign, gift, allocation, distribution, audit
+// ---------------------------------------------------------------------------
+
+enum DonorType {
+  INDIVIDUAL
+  COMPANY
+  ORGANIZATION
+  FOUNDATION
+  INSTITUTION
+  PARTNER
+  ANONYMOUS
+}
+
+enum DonorStatus {
+  DRAFT
+  REGISTERED
+  PENDING_VERIFICATION
+  VERIFIED
+  MORE_INFORMATION_REQUIRED
+  REJECTED
+}
+
+enum CampaignStatus {
+  DRAFT
+  PUBLISHED
+  ACTIVE
+  TARGET_REACHED
+  CLOSED
+  SUSPENDED
+  CANCELLED
+}
+
+enum PledgeFrequency {
+  ONE_TIME
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUAL
+  ANNUAL
+  OTHER
+}
+
+enum PledgeStatus {
+  PLEDGED
+  PARTIALLY_FULFILLED
+  FULFILLED
+  EXPIRED
+  CANCELLED
+}
+
+enum DonationType {
+  CASH
+  BANK_TRANSFER
+  MOBILE_PAYMENT
+  CARD
+  IN_KIND
+  OTHER
+}
+
+enum DonationStatus {
+  DRAFT
+  SUBMITTED
+  PENDING_VERIFICATION
+  VERIFIED
+  PAYMENT_PENDING
+  RECEIVED
+  APPROVED
+  ALLOCATED
+  DISTRIBUTED
+  COMPLETED
+  REJECTED
+  CANCELLED
+  FAILED
+  REFUNDED
+  UNDER_REVIEW
+}
+
+enum DonationPaymentStatus {
+  INITIATED
+  PENDING
+  SUCCESS
+  FAILED
+  REVERSED
+  REFUNDED
+}
+
+enum BeneficiaryType {
+  SCHOOL
+  STUDENT
+  FAMILY
+  COMMUNITY
+  INSTITUTION
+  PROJECT
+  PROGRAM
+  OTHER
+}
+
+enum BeneficiaryStatus {
+  DRAFT
+  REGISTERED
+  VERIFIED
+  NOT_VERIFIED
+  MORE_INFORMATION_REQUIRED
+}
+
+enum AllocationCategory {
+  SCHOOL_SUPPORT
+  STUDENT_SUPPORT
+  INFRASTRUCTURE
+  EDUCATION_MATERIALS
+  EMERGENCY_SUPPORT
+  COMMUNITY_SUPPORT
+  PROGRAM_SUPPORT
+  OTHER
+}
+
+enum AllocationStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  ALLOCATED
+  CANCELLED
+}
+
+enum DistributionMethod {
+  BANK_TRANSFER
+  MOBILE_PAYMENT
+  DIRECT_DELIVERY
+  IN_KIND_DELIVERY
+  OTHER
+}
+
+enum DisbursementStatus {
+  INITIATED
+  PROCESSING
+  SUCCESS
+  FAILED
+  REVERSED
+}
+
+enum DonationRefundStatus {
+  REQUESTED
+  APPROVED
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+enum AdjustmentType {
+  AMOUNT_CORRECTION
+  CLASSIFICATION_CORRECTION
+  CAMPAIGN_CORRECTION
+  BENEFICIARY_CORRECTION
+  OTHER
+}
+
+enum BudgetCategory {
+  PROGRAM_ACTIVITIES
+  SCHOOL_SUPPORT
+  STUDENT_SUPPORT
+  LOGISTICS
+  ADMINISTRATION
+  COMMUNICATION
+  OTHER
+}
+
+model Donor {
+  id                     String      @id @default(cuid())
+  publicId               String      @unique
+  donorType              DonorType
+  status                 DonorStatus @default(DRAFT)
+  name                   String
+  organizationName       String?
+  registrationNumber     String?
+  taxId                  String?
+  country                String
+  district               String?
+  address                String
+  telephone              String
+  email                  String?
+  website                String?
+  contactName            String?
+  contactPosition        String?
+  contactTelephone       String?
+  contactEmail           String?
+  contactIdentification  String?
+  authorizationLetter    String?
+  identityVerified       Boolean     @default(false)
+  organizationVerified   Boolean     @default(false)
+  registrationVerified   Boolean     @default(false)
+  contactVerified        Boolean     @default(false)
+  documentsVerified      Boolean     @default(false)
+  complianceVerified     Boolean     @default(false)
+  verificationResult     String?
+  verifiedBy             String?
+  verificationDate       DateTime?
+  verificationComments   String?
+  documents              Json?
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+  pledges                Pledge[]
+  donations              Donation[]
+  agreements             DonationAgreement[]
+  messages               DonorMessage[]
+
+  @@index([donorType, status])
+  @@index([email])
+}
+
+model Campaign {
+  id                 String         @id @default(cuid())
+  publicId           String         @unique
+  code               String         @unique
+  name               String
+  description        String?
+  campaignType       String
+  purpose            String
+  targetBeneficiary  String?
+  manager            String?
+  startDate          DateTime?
+  endDate            DateTime?
+  status             CampaignStatus @default(DRAFT)
+  approvalStatus     String         @default("PENDING")
+  approvedBy         String?
+  approvalDate       DateTime?
+  approvalComments   String?
+  targetAmount       Decimal        @db.Decimal(18, 2)
+  currency           String         @default("RWF")
+  minimumDonation    Decimal?       @db.Decimal(18, 2)
+  maximumDonation    Decimal?       @db.Decimal(18, 2)
+  targetDonors       Int?
+  documents          Json?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  budgets            CampaignBudget[]
+  monitors           CampaignMonitor[]
+  pledges            Pledge[]
+  donations          Donation[]
+  agreements         DonationAgreement[]
+  impacts            ImpactReport[]
+
+  @@index([status])
+}
+
+model CampaignBudget {
+  id              String         @id @default(cuid())
+  campaignId      String
+  category        BudgetCategory
+  approvedBudget  Decimal        @db.Decimal(18, 2)
+  currency        String         @default("RWF")
+  amountUsed      Decimal        @default(0) @db.Decimal(18, 2)
+  department      String?
+  approvalDate    DateTime?
+  createdAt       DateTime       @default(now())
+  campaign        Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+}
+
+model CampaignMonitor {
+  id                    String   @id @default(cuid())
+  campaignId            String
+  reportingPeriod       String
+  activitiesCompleted   String
+  beneficiariesReached  Int
+  issues                String?
+  correctiveActions     String?
+  officer               String
+  createdAt             DateTime @default(now())
+  campaign              Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+}
+
+model Pledge {
+  id                  String          @id @default(cuid())
+  publicId            String          @unique
+  donorId             String
+  campaignId          String
+  amount              Decimal         @db.Decimal(18, 2)
+  currency            String          @default("RWF")
+  pledgeDate          DateTime
+  expectedPaymentDate DateTime?
+  frequency           PledgeFrequency
+  purpose             String?
+  notes               String?
+  status              PledgeStatus    @default(PLEDGED)
+  fulfilledAmount     Decimal         @default(0) @db.Decimal(18, 2)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  donor               Donor           @relation(fields: [donorId], references: [id])
+  campaign            Campaign        @relation(fields: [campaignId], references: [id])
+  donations           Donation[]
+
+  @@index([donorId])
+  @@index([campaignId, status])
+}
+
+model Beneficiary {
+  id                     String            @id @default(cuid())
+  publicId               String            @unique
+  beneficiaryType        BeneficiaryType
+  status                 BeneficiaryStatus @default(DRAFT)
+  name                   String
+  registrationNumber     String?
+  contactPerson          String?
+  telephone              String
+  email                  String?
+  province               String?
+  district               String?
+  sector                 String?
+  physicalAddress        String
+  bankName               String?
+  bankAccount            String?
+  mobileMoneyNumber      String?
+  identityVerified       Boolean           @default(false)
+  registrationVerified   Boolean           @default(false)
+  locationVerified       Boolean           @default(false)
+  eligibilityVerified    Boolean           @default(false)
+  documentsVerified      Boolean           @default(false)
+  paymentInfoVerified    Boolean           @default(false)
+  verificationDecision   String?
+  verifiedBy             String?
+  verificationDate       DateTime?
+  verificationComments   String?
+  documents              Json?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  donations              Donation[]
+  allocations            Allocation[]
+  impacts                ImpactReport[]
+
+  @@index([beneficiaryType, status])
+}
+
+model Donation {
+  id                    String         @id @default(cuid())
+  publicId              String         @unique
+  reference             String         @unique
+  donorId               String
+  campaignId            String?
+  pledgeId              String?
+  beneficiaryId         String?
+  donationType          DonationType
+  status                DonationStatus @default(DRAFT)
+  heldFromStatus        String?
+  donationDate          DateTime?
+  amount                Decimal        @db.Decimal(18, 2)
+  currency              String         @default("RWF")
+  purpose               String?
+  donorVerified         Boolean        @default(false)
+  amountVerified        Boolean        @default(false)
+  paymentVerified       Boolean        @default(false)
+  campaignVerified      Boolean        @default(false)
+  purposeVerified       Boolean        @default(false)
+  documentsVerified     Boolean        @default(false)
+  beneficiaryVerified   Boolean        @default(false)
+  verificationResult    String?
+  verificationComment   String?
+  verifiedBy            String?
+  verificationDate      DateTime?
+  approvalDecision      String?
+  approvedAmount        Decimal?       @db.Decimal(18, 2)
+  conditions            String?
+  approvedBy            String?
+  approvalDate          DateTime?
+  approvalComments      String?
+  documents             Json?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  donor                 Donor          @relation(fields: [donorId], references: [id])
+  campaign              Campaign?      @relation(fields: [campaignId], references: [id])
+  pledge                Pledge?        @relation(fields: [pledgeId], references: [id])
+  beneficiary           Beneficiary?   @relation(fields: [beneficiaryId], references: [id])
+  inKind                InKindDonation?
+  payments              DonationPayment[]
+  allocations           Allocation[]
+  refunds               DonationRefund[]
+  adjustments           DonationAdjustment[]
+  receipt               DonationReceipt?
+  reconciliations       DonationReconciliation[]
+  ledger                DonationLedgerEntry[]
+  impacts               ImpactReport[]
+  messages              DonorMessage[]
+  compliance            DonationCompliance[]
+  audits                DonationAudit[]
+
+  @@index([status])
+  @@index([donorId])
+  @@index([campaignId])
+  @@index([donationType])
+}
+
+model InKindDonation {
+  id                   String    @id @default(cuid())
+  publicId             String    @unique
+  donationId           String    @unique
+  category             String
+  description          String
+  quantity             Decimal   @db.Decimal(18, 2)
+  unit                 String
+  estimatedValue       Decimal   @db.Decimal(18, 2)
+  currency             String    @default("RWF")
+  condition            String?
+  dateReceived         DateTime?
+  storageLocation      String?
+  intendedBeneficiary  String?
+  documents            Json?
+  valuationMethod      String?
+  valuer               String?
+  valuationDate        DateTime?
+  unitValue            Decimal?  @db.Decimal(18, 2)
+  totalValue           Decimal?  @db.Decimal(18, 2)
+  evidence             String?
+  valuedBy             String?
+  reviewedBy           String?
+  approvedBy           String?
+  donation             Donation  @relation(fields: [donationId], references: [id], onDelete: Cascade)
+}
+
+model DonationPayment {
+  id                    String                @id @default(cuid())
+  publicId              String                @unique
+  donationId            String
+  amount                Decimal               @db.Decimal(18, 2)
+  currency              String                @default("RWF")
+  paymentMethod         String
+  payerName             String?
+  payerPhone            String?
+  transactionReference  String?
+  externalTransactionId String?
+  paymentDate           DateTime?
+  status                DonationPaymentStatus @default(INITIATED)
+  reconciliationStatus  String                @default("PENDING")
+  railCode              String?
+  railName              String?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  donation              Donation              @relation(fields: [donationId], references: [id], onDelete: Cascade)
+
+  @@index([donationId])
+  @@index([externalTransactionId])
+  @@index([status])
+}
+
+model Allocation {
+  id               String             @id @default(cuid())
+  publicId         String             @unique
+  donationId       String
+  campaignId       String?
+  beneficiaryId    String
+  allocationDate   DateTime
+  amount           Decimal            @db.Decimal(18, 2)
+  currency         String             @default("RWF")
+  purpose          String
+  category         AllocationCategory
+  status           AllocationStatus   @default(DRAFT)
+  decision         String?
+  approvedBy       String?
+  approvalDate     DateTime?
+  approvalComments String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  donation         Donation           @relation(fields: [donationId], references: [id])
+  beneficiary      Beneficiary        @relation(fields: [beneficiaryId], references: [id])
+  distributions    Distribution[]
+  disbursements    DonationDisbursement[]
+
+  @@index([donationId, status])
+  @@index([beneficiaryId])
+}
+
+model Distribution {
+  id                    String             @id @default(cuid())
+  publicId              String             @unique
+  allocationId          String
+  amount                Decimal?           @db.Decimal(18, 2)
+  itemDescription       String?
+  distributionDate      DateTime
+  method                DistributionMethod
+  location              String?
+  officer               String
+  beneficiaryConfirmed  Boolean            @default(false)
+  confirmationNote      String?
+  documents             Json?
+  status                String             @default("RECORDED")
+  createdAt             DateTime           @default(now())
+  allocation            Allocation         @relation(fields: [allocationId], references: [id], onDelete: Cascade)
+
+  @@index([allocationId])
+}
+
+model DonationDisbursement {
+  id                 String             @id @default(cuid())
+  publicId           String             @unique
+  allocationId       String
+  beneficiaryId      String
+  amount             Decimal            @db.Decimal(18, 2)
+  currency           String             @default("RWF")
+  bankAccount        String?
+  mobileMoneyNumber  String?
+  paymentMethod      String
+  paymentReference   String?
+  paymentDate        DateTime?
+  status             DisbursementStatus @default(INITIATED)
+  railCode           String?
+  railName           String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  allocation         Allocation         @relation(fields: [allocationId], references: [id], onDelete: Cascade)
+
+  @@index([allocationId])
+}
+
+model DonationRefund {
+  id                            String               @id @default(cuid())
+  publicId                      String               @unique
+  donationId                    String
+  originalAmount                Decimal              @db.Decimal(18, 2)
+  amount                        Decimal              @db.Decimal(18, 2)
+  currency                      String               @default("RWF")
+  reason                        String
+  originalTransactionReference  String?
+  destination                   String
+  documents                     Json?
+  requestedBy                   String
+  reviewedBy                    String?
+  approvedBy                    String?
+  approvalDate                  DateTime?
+  status                        DonationRefundStatus @default(REQUESTED)
+  createdAt                     DateTime             @default(now())
+  updatedAt                     DateTime             @updatedAt
+  donation                      Donation             @relation(fields: [donationId], references: [id])
+
+  @@index([donationId, status])
+}
+
+model DonationAdjustment {
+  id               String         @id @default(cuid())
+  publicId         String         @unique
+  donationId       String
+  originalAmount   Decimal        @db.Decimal(18, 2)
+  amount           Decimal        @db.Decimal(18, 2)
+  adjustmentType   AdjustmentType
+  reason           String
+  documentName     String?
+  requestedBy      String
+  approvedBy       String
+  campaignId       String?
+  beneficiaryId    String?
+  donationType     String?
+  appliedAt        DateTime       @default(now())
+  donation         Donation       @relation(fields: [donationId], references: [id])
+
+  @@index([donationId])
+}
+
+model DonationReceipt {
+  id                   String   @id @default(cuid())
+  publicId             String   @unique
+  donationId           String   @unique
+  donorName            String
+  campaignName         String?
+  amount               Decimal  @db.Decimal(18, 2)
+  currency             String   @default("RWF")
+  donationDate         DateTime
+  paymentMethod        String?
+  transactionReference String?
+  purpose              String?
+  signatory            String
+  issuedAt             DateTime @default(now())
+  donation             Donation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+}
+
+model ImpactReport {
+  id                 String       @id @default(cuid())
+  publicId           String       @unique
+  donationId         String?
+  campaignId         String?
+  beneficiaryId      String?
+  reportingPeriod    String
+  amountUsed         Decimal      @db.Decimal(18, 2)
+  currency           String       @default("RWF")
+  beneficiaryCount   Int
+  activities         String
+  outputs            String
+  outcomes           String
+  challenges         String?
+  evidence           Json?
+  createdAt          DateTime     @default(now())
+  donation           Donation?    @relation(fields: [donationId], references: [id])
+  campaign           Campaign?    @relation(fields: [campaignId], references: [id])
+  beneficiary        Beneficiary? @relation(fields: [beneficiaryId], references: [id])
+
+  @@index([donationId])
+  @@index([campaignId])
+}
+
+model DonorMessage {
+  id                  String   @id @default(cuid())
+  publicId            String   @unique
+  donorId             String
+  donationId          String?
+  campaignId          String?
+  communicationType   String
+  channel             String
+  subject             String
+  message             String
+  sentBy              String
+  sentAt              DateTime @default(now())
+  deliveryStatus      String   @default("QUEUED")
+  donor               Donor    @relation(fields: [donorId], references: [id])
+  donation            Donation? @relation(fields: [donationId], references: [id])
+
+  @@index([donorId])
+}
+
+model DonationAgreement {
+  id                      String    @id @default(cuid())
+  publicId                String    @unique
+  donorId                 String
+  campaignId              String?
+  amount                  Decimal   @db.Decimal(18, 2)
+  currency                String    @default("RWF")
+  purpose                 String
+  conditions              String
+  startDate               DateTime
+  endDate                 DateTime
+  reportingRequirements   String?
+  documents               Json?
+  donorRepresentative     String?
+  rupsaRepresentative     String?
+  acceptedAt              DateTime?
+  status                  String    @default("DRAFT")
+  createdAt               DateTime  @default(now())
+  donor                   Donor     @relation(fields: [donorId], references: [id])
+  campaign                Campaign? @relation(fields: [campaignId], references: [id])
+
+  @@index([donorId])
+}
+
+model DonationCompliance {
+  id                      String   @id @default(cuid())
+  publicId                String   @unique
+  donationId              String?
+  campaignId              String?
+  donorIdentified         Boolean  @default(false)
+  donorVerified           Boolean  @default(false)
+  sourceRecorded          Boolean  @default(false)
+  approvalsObtained       Boolean  @default(false)
+  documentationComplete   Boolean  @default(false)
+  beneficiaryVerified     Boolean  @default(false)
+  restrictionsRecorded    Boolean  @default(false)
+  reportingCompleted      Boolean  @default(false)
+  result                  String
+  officerName             String
+  reviewedAt              DateTime
+  comments                String?
+  createdAt               DateTime @default(now())
+  donation                Donation? @relation(fields: [donationId], references: [id])
+
+  @@index([donationId])
+  @@index([result])
+}
+
+model DonationReconciliation {
+  id                     String    @id @default(cuid())
+  publicId               String    @unique
+  donationId             String
+  paymentId              String?
+  expectedAmount         Decimal   @db.Decimal(18, 2)
+  receivedAmount         Decimal   @db.Decimal(18, 2)
+  currency               String    @default("RWF")
+  externalTransactionId  String?
+  settlementReference    String?
+  settlementDate         DateTime?
+  difference             Decimal   @db.Decimal(18, 2)
+  status                 String
+  createdAt              DateTime  @default(now())
+  donation               Donation  @relation(fields: [donationId], references: [id], onDelete: Cascade)
+
+  @@index([donationId])
+  @@index([status])
+}
+
+model DonationLedgerEntry {
+  id          String   @id @default(cuid())
+  donationId  String
+  entryType   String
+  amount      Decimal  @db.Decimal(18, 2)
+  currency    String   @default("RWF")
+  description String
+  reference   String?
+  createdAt   DateTime @default(now())
+  donation    Donation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+
+  @@index([donationId, createdAt])
+}
+
+model DonationAudit {
+  id              String    @id @default(cuid())
+  publicId        String    @unique
+  donationId      String?
+  entityType      String
+  entityId        String
+  userId          String?
+  action          String
+  previousStatus  String?
+  newStatus       String?
+  amount          Decimal?  @db.Decimal(18, 2)
+  reason          String?
+  reference       String?
+  ip              String?
+  sessionId       String?
+  createdAt       DateTime  @default(now())
+  donation        Donation? @relation(fields: [donationId], references: [id])
+
+  @@index([donationId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model InvestmentOpportunity {
+  id                 String   @id @default(cuid())
+  publicId           String   @unique
+  code               String   @unique
+  name               String
+  investmentType     String
+  description        String
+  projectName        String
+  sector             String
+  location           String
+  managerName        String
+  startDate          DateTime
+  endDate            DateTime
+  status             String   @default("DRAFT")
+  targetAmount       Decimal  @db.Decimal(18, 2)
+  minimumAmount      Decimal  @db.Decimal(18, 2)
+  maximumAmount      Decimal? @db.Decimal(18, 2)
+  currency           String   @default("RWF")
+  expectedReturnRate Decimal  @db.Decimal(8, 4)
+  returnFrequency    String
+  investmentPeriod   String
+  expectedProfit     Decimal? @db.Decimal(18, 2)
+  riskDisclosure     String
+  managementFeeRate  Decimal  @default(0) @db.Decimal(8, 4)
+  otherCharges       Decimal  @default(0) @db.Decimal(18, 2)
+  earlyRedemptionRate Decimal @default(0) @db.Decimal(8, 4)
+  documents          Json?
+  feeLines           Json?
+  amountRaised       Decimal  @default(0) @db.Decimal(18, 2)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  applications       InvestmentApplication[]
+  positions          InvestmentPosition[]
+
+  @@index([status])
+}
+
+model InvestmentApplication {
+  id                   String   @id @default(cuid())
+  publicId             String   @unique
+  schoolId             String?
+  registrationId       String?
+  opportunityId        String
+  representative       String
+  telephone            String
+  email                String?
+  requestedAmount      Decimal  @db.Decimal(18, 2)
+  currency             String
+  investmentPeriod     String
+  purpose              String?
+  fundingSource        String
+  confirmInformation   Boolean  @default(false)
+  reviewedTerms        Boolean  @default(false)
+  understandRisks      Boolean  @default(false)
+  agreeAgreement       Boolean  @default(false)
+  documents            Json?
+  status               String   @default("DRAFT")
+  eligibility          Json?
+  eligibilityResult    String?
+  eligibilityDecision  String?
+  eligibilityComments  String?
+  diligence            Json?
+  diligenceResult      String?
+  risk                 Json?
+  riskLevel            String?
+  riskScore            Decimal? @db.Decimal(8, 2)
+  mitigationPlan       String?
+  assessor             String?
+  assessmentDate       DateTime?
+  reviewDate           DateTime?
+  decision             String?
+  approvedAmount       Decimal? @db.Decimal(18, 2)
+  approvedPeriod       String?
+  returnRate           Decimal? @db.Decimal(8, 4)
+  returnFrequency      String?
+  fees                 Decimal? @db.Decimal(18, 2)
+  conditions           String?
+  startDate            DateTime?
+  maturityDate         DateTime?
+  approvedBy           String?
+  approvalDate         DateTime?
+  approvalComments     String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  school               School?  @relation(fields: [schoolId], references: [id])
+  registration         Registration? @relation(fields: [registrationId], references: [id])
+  opportunity          InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
+  position             InvestmentPosition?
+
+  @@index([status])
+  @@index([schoolId])
+  @@index([registrationId])
+}
+
+model InvestmentPosition {
+  id                  String    @id @default(cuid())
+  publicId            String    @unique
+  applicationId       String    @unique
+  schoolId            String?
+  registrationId      String?
+  opportunityId       String
+  amount              Decimal   @db.Decimal(18, 2)
+  currency            String
+  period              String
+  returnRate          Decimal   @db.Decimal(8, 4)
+  returnFrequency     String
+  fees                Decimal   @default(0) @db.Decimal(18, 2)
+  conditions          String?
+  startDate           DateTime
+  maturityDate        DateTime
+  status              String    @default("APPROVED")
+  agreementAccepted   Boolean   @default(false)
+  acceptedBy          String?
+  acceptedAt          DateTime?
+  agreementVersion    String    @default("1")
+  maturityInstruction String?
+  reinvestAmount      Decimal?  @db.Decimal(18, 2)
+  statementGenerated  Boolean   @default(false)
+  obligationsSettled  Boolean   @default(false)
+  closureReason       String?
+  closedAt            DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  application         InvestmentApplication @relation(fields: [applicationId], references: [id])
+  school              School?   @relation(fields: [schoolId], references: [id])
+  registration        Registration? @relation(fields: [registrationId], references: [id])
+  opportunity         InvestmentOpportunity @relation(fields: [opportunityId], references: [id])
+  contributions       InvestmentContribution[]
+  payouts             InvestmentPayout[]
+  exits               InvestmentExit[]
+  transfersFrom       InvestmentTransfer[] @relation("TransferFrom")
+  transfersTo         InvestmentTransfer[] @relation("TransferTo")
+  ledger              InvestmentLedgerEntry[]
+  audits              InvestmentAudit[]
+  messages            InvestmentMessage[]
+
+  @@index([status])
+  @@index([schoolId])
+  @@index([maturityDate])
+}
+
+model InvestmentContribution {
+  id                    String    @id @default(cuid())
+  publicId              String    @unique
+  positionId            String
+  amount                Decimal   @db.Decimal(18, 2)
+  currency              String
+  contributionDate      DateTime
+  paymentMethod         String
+  bank                  String?
+  accountReference      String?
+  paymentReference      String?
+  externalTransactionId String?
+  receivedAmount        Decimal?  @db.Decimal(18, 2)
+  status                String    @default("INITIATED")
+  reconciliationStatus  String    @default("PENDING")
+  railCode              String?
+  railName              String?
+  allocatedUnits        Decimal?  @db.Decimal(18, 4)
+  unitPrice             Decimal?  @db.Decimal(18, 4)
+  allocationPercent     Decimal?  @db.Decimal(8, 4)
+  allocatedAt           DateTime?
+  createdAt             DateTime  @default(now())
+  position              InvestmentPosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+
+  @@index([positionId])
+  @@index([status])
+}
+
+model InvestmentPayout {
+  id             String    @id @default(cuid())
+  publicId       String    @unique
+  positionId     String
+  opportunityId  String
+  kind           String
+  period         String
+  principal      Decimal   @db.Decimal(18, 2)
+  rate           Decimal   @db.Decimal(8, 4)
+  grossReturn    Decimal   @db.Decimal(18, 2)
+  managementFee  Decimal   @default(0) @db.Decimal(18, 2)
+  otherCharges   Decimal   @default(0) @db.Decimal(18, 2)
+  tax            Decimal   @default(0) @db.Decimal(18, 2)
+  netReturn      Decimal   @db.Decimal(18, 2)
+  paymentDate    DateTime?
+  status         String    @default("CALCULATED")
+  calculatedBy   String
+  reviewedBy     String?
+  approvedBy     String?
+  approvalDate   DateTime?
+  holdingPercent Decimal?  @db.Decimal(8, 4)
+  createdAt      DateTime  @default(now())
+  position       InvestmentPosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+
+  @@index([positionId])
+  @@index([opportunityId])
+  @@index([status])
+}
+
+model InvestmentExit {
+  id                String   @id @default(cuid())
+  publicId          String   @unique
+  positionId        String
+  kind              String
+  redemptionType    String?
+  requestedAmount   Decimal  @db.Decimal(18, 2)
+  currency          String
+  reason            String
+  requestDate       DateTime
+  bankAccount       String?
+  destination       String
+  penalty           Decimal  @default(0) @db.Decimal(18, 2)
+  netAmount         Decimal  @db.Decimal(18, 2)
+  decision          String?
+  status            String   @default("REQUESTED")
+  originalReference String?
+  paymentReference  String?
+  approvedBy        String?
+  createdAt         DateTime @default(now())
+  position          InvestmentPosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+
+  @@index([positionId])
+  @@index([kind, status])
+}
+
+model InvestmentTransfer {
+  id             String   @id @default(cuid())
+  publicId       String   @unique
+  fromPositionId String
+  toPositionId   String
+  amount         Decimal  @db.Decimal(18, 2)
+  fees           Decimal  @default(0) @db.Decimal(18, 2)
+  reason         String
+  transferDate   DateTime
+  documents      Json?
+  status         String   @default("REQUESTED")
+  requestedBy    String
+  reviewedBy     String?
+  approvedBy     String?
+  createdAt      DateTime @default(now())
+  fromPosition   InvestmentPosition @relation("TransferFrom", fields: [fromPositionId], references: [id])
+  toPosition     InvestmentPosition @relation("TransferTo", fields: [toPositionId], references: [id])
+
+  @@index([fromPositionId])
+  @@index([toPositionId])
+}
+
+model InvestmentLedgerEntry {
+  id          String   @id @default(cuid())
+  positionId  String
+  entryType   String
+  amount      Decimal  @db.Decimal(18, 2)
+  currency    String
+  description String
+  reference   String?
+  createdAt   DateTime @default(now())
+  position    InvestmentPosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+
+  @@index([positionId, createdAt])
+}
+
+model InvestmentAudit {
+  id             String   @id @default(cuid())
+  publicId       String   @unique
+  positionId     String?
+  entityType     String
+  entityId       String
+  userId         String?
+  action         String
+  previousStatus String?
+  newStatus      String?
+  amount         Decimal? @db.Decimal(18, 2)
+  reason         String?
+  reference      String?
+  ip             String?
+  sessionId      String?
+  createdAt      DateTime @default(now())
+  position       InvestmentPosition? @relation(fields: [positionId], references: [id])
+
+  @@index([positionId])
+  @@index([createdAt])
+}
+
+model InvestmentMessage {
+  id        String   @id @default(cuid())
+  publicId  String   @unique
+  positionId String?
+  memberName String
+  kind      String
+  channel   String
+  subject   String
+  message   String
+  sentBy    String
+  status    String
+  sentAt    DateTime @default(now())
+  position  InvestmentPosition? @relation(fields: [positionId], references: [id])
+
+  @@index([sentAt])
+}
+
+// ---------------------------------------------------------------------------
+// Account opening — one file linked to an existing party
+// ---------------------------------------------------------------------------
+
+model OpenedAccount {
+  id                      String    @id @default(cuid())
+  publicId                String    @unique
+  accountType             String
+  status                  String    @default("DRAFT")
+  channel                 String
+  referral                String?
+  purpose                 String
+  language                String    @default("English")
+  communicationPreference String
+  digitalAccess           Boolean   @default(false)
+  mobileAccess            Boolean   @default(false)
+  webAccess               Boolean   @default(false)
+  applicantName           String
+  identityNumber          String?
+  phone                   String
+  email                   String?
+  country                 String    @default("RW")
+  province                String?
+  district                String?
+  sector                  String?
+  cell                    String?
+  village                 String?
+  address                 String?
+  termsAccepted           Boolean   @default(false)
+  privacyAccepted         Boolean   @default(false)
+  dataConsent             Boolean   @default(false)
+  consentVersion          String?
+  consentDate             DateTime?
+  documents               Json?
+  profile                 Json?
+  devices                 Json?
+  limits                  Json?
+  changes                 Json?
+  schoolId                String?
+  guardianId              String?
+  studentId               String?
+  registrationId          String?
+  userId                  String?
+  identityStatus          String    @default("PENDING")
+  phoneStatus             String    @default("PENDING")
+  emailStatus             String    @default("PENDING")
+  addressStatus           String    @default("PENDING")
+  documentStatus          String    @default("PENDING")
+  kycResult               String    @default("PENDING")
+  kycNotes                String?
+  duplicateResult         String    @default("NOT_CHECKED")
+  duplicateMatches        Json?
+  duplicateNote           String?
+  riskLevel               String?
+  riskNotes               String?
+  complianceResult        String    @default("PENDING")
+  decision                String?
+  conditions              String?
+  approvedBy              String?
+  approvalDate            DateTime?
+  rejectionReason         String?
+  username                String?
+  roleName                String?
+  mfaRequired             Boolean   @default(true)
+  mfaMethod               String?
+  accessIssued            Boolean   @default(false)
+  activatedAt             DateTime?
+  activatedBy             String?
+  lastActivityAt          DateTime?
+  suspendedAt             DateTime?
+  suspensionReason        String?
+  legalHold               Boolean   @default(false)
+  legalHoldReason         String?
+  closedAt                DateTime?
+  closureReason           String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  school                  School?       @relation(fields: [schoolId], references: [id])
+  guardian                Guardian?     @relation(fields: [guardianId], references: [id])
+  student                 Student?      @relation(fields: [studentId], references: [id])
+  registration            Registration? @relation(fields: [registrationId], references: [id])
+  user                    User?         @relation(fields: [userId], references: [id])
+  audits                  AccountAudit[]
+  messages                AccountMessage[]
+
+  @@index([accountType, status])
+  @@index([identityNumber])
+  @@index([phone])
+  @@index([email])
+}
+
+model AccountAudit {
+  id             String   @id @default(cuid())
+  publicId       String   @unique
+  accountId      String
+  entityType     String
+  entityId       String
+  userId         String?
+  action         String
+  previousStatus String?
+  newStatus      String?
+  reason         String?
+  reference      String?
+  ip             String?
+  createdAt      DateTime @default(now())
+  account        OpenedAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([createdAt])
+}
+
+model AccountMessage {
+  id          String   @id @default(cuid())
+  publicId    String   @unique
+  accountId   String?
+  accountName String
+  kind        String
+  channel     String
+  subject     String
+  message     String
+  sentBy      String
+  status      String
+  sentAt      DateTime @default(now())
+  account     OpenedAccount? @relation(fields: [accountId], references: [id])
+
+  @@index([sentAt])
+}
+
+model LiteracyProgramme {
+  id                     String   @id @default(cuid())
+  publicId               String   @unique
+  code                   String   @unique
+  name                   String
+  description            String
+  audience               String
+  category               String
+  language               String
+  deliveryMethod         String
+  duration               String
+  moduleCount            Int      @default(1)
+  certificationAvailable Boolean  @default(true)
+  validityMonths         Int      @default(12)
+  passMark               Decimal  @db.Decimal(5, 2)
+  topics                 Json?
+  status                 String   @default("DRAFT")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  courses                LiteracyCourse[]
+
+  @@index([status])
+}
+
+model LiteracyCourse {
+  id                  String    @id @default(cuid())
+  publicId            String    @unique
+  programmeId         String
+  code                String    @unique
+  name                String
+  description         String
+  objectives          String
+  audience            String
+  difficulty          String
+  duration            String
+  lessonCount         Int       @default(1)
+  assessmentRequired  Boolean   @default(true)
+  certificateRequired Boolean   @default(true)
+  passMark            Decimal   @db.Decimal(5, 2)
+  version             String    @default("1")
+  effectiveDate       DateTime?
+  reviewDate          DateTime?
+  modules             Json
+  questions           Json?
+  materials           String?
+  status              String    @default("DRAFT")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  programme           LiteracyProgramme    @relation(fields: [programmeId], references: [id])
+  enrollments         LiteracyEnrollment[]
+  sessions            LiteracySession[]
+
+  @@index([programmeId])
+  @@index([status])
+}
+
+model LiteracyLearner {
+  id             String   @id @default(cuid())
+  publicId       String   @unique
+  learnerType    String
+  name           String
+  phone          String
+  email          String?
+  language       String
+  district       String?
+  educationLevel String?
+  occupation     String?
+  trainingNeeds  String
+  accessibility  String?
+  gender         String?
+  status         String   @default("REGISTERED")
+  schoolId       String?
+  guardianId     String?
+  studentId      String?
+  registrationId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  school         School?       @relation(fields: [schoolId], references: [id])
+  guardian       Guardian?     @relation(fields: [guardianId], references: [id])
+  student        Student?      @relation(fields: [studentId], references: [id])
+  registration   Registration? @relation(fields: [registrationId], references: [id])
+  enrollments    LiteracyEnrollment[]
+  attendances    LiteracyAttendance[]
+  certificates   LiteracyCertificate[]
+  retrainings    LiteracyRetraining[]
+  goals          LiteracyGoal[]
+  healthChecks   LiteracyHealth[]
+  evidence       LiteracyEvidence[]
+  feedback       LiteracyFeedback[]
+
+  @@index([learnerType, status])
+  @@index([schoolId])
+}
+
+model LiteracyTrainer {
+  id             String    @id @default(cuid())
+  publicId       String    @unique
+  name           String
+  organization   String
+  qualification  String
+  certification  String
+  expertise      String
+  phone          String
+  email          String
+  status         String    @default("PENDING")
+  validityMonths Int       @default(12)
+  approvedBy     String?
+  approvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  sessions       LiteracySession[]
+
+  @@index([status])
+}
+
+model LiteracyEnrollment {
+  id                 String    @id @default(cuid())
+  publicId           String    @unique
+  learnerId          String
+  courseId           String
+  trainerName        String?
+  deliveryMethod     String
+  startDate          DateTime
+  expectedCompletion DateTime?
+  status             String    @default("ENROLLED")
+  progress           Decimal   @default(0) @db.Decimal(5, 2)
+  preScore           Decimal?  @db.Decimal(5, 2)
+  postScore          Decimal?  @db.Decimal(5, 2)
+  weakest            String?
+  strongest          String?
+  exercises          Json?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  learner            LiteracyLearner     @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  course             LiteracyCourse      @relation(fields: [courseId], references: [id])
+  assessments        LiteracyAssessment[]
+  certificate        LiteracyCertificate?
+  evidence           LiteracyEvidence[]
+
+  @@unique([learnerId, courseId])
+  @@index([status])
+}
+
+model LiteracySession {
+  id                 String   @id @default(cuid())
+  publicId           String   @unique
+  courseId           String
+  trainerId          String?
+  moduleTitle        String
+  sessionDate        DateTime
+  startTime          String
+  endTime            String
+  venue              String?
+  onlineLink         String?
+  capacity           Int      @default(30)
+  language           String
+  audience           String
+  attendanceRequired Boolean  @default(true)
+  status             String   @default("SCHEDULED")
+  createdAt          DateTime @default(now())
+  course             LiteracyCourse      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  trainer            LiteracyTrainer?    @relation(fields: [trainerId], references: [id])
+  attendances        LiteracyAttendance[]
+
+  @@index([courseId])
+  @@index([sessionDate])
+}
+
+model LiteracyAttendance {
+  id          String   @id @default(cuid())
+  publicId    String   @unique
+  sessionId   String
+  learnerId   String
+  method      String
+  percent     Decimal  @db.Decimal(5, 2)
+  confirmedBy String
+  status      String
+  createdAt   DateTime @default(now())
+  session     LiteracySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  learner     LiteracyLearner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, learnerId])
+}
+
+model LiteracyAssessment {
+  id           String   @id @default(cuid())
+  publicId     String   @unique
+  enrollmentId String
+  kind         String
+  scores       Json
+  percentage   Decimal  @db.Decimal(5, 2)
+  passMark     Decimal  @db.Decimal(5, 2)
+  result       String
+  attempt      Int
+  reviewer     String
+  createdAt    DateTime @default(now())
+  enrollment   LiteracyEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@index([enrollmentId, kind])
+}
+
+model LiteracyCertificate {
+  id              String   @id @default(cuid())
+  publicId        String   @unique
+  learnerId       String
+  enrollmentId    String   @unique
+  courseName      String
+  programmeName   String
+  score           Decimal  @db.Decimal(5, 2)
+  certificateType String
+  issuedAt        DateTime @default(now())
+  expiresAt       DateTime
+  verificationRef String
+  issuedBy        String
+  status          String   @default("ACTIVE")
+  learner         LiteracyLearner    @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  enrollment      LiteracyEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model LiteracyRetraining {
+  id             String    @id @default(cuid())
+  publicId       String    @unique
+  learnerId      String
+  reason         String
+  previousCourse String
+  newCourseId    String?
+  modules        String
+  deadline       DateTime?
+  trainerName    String?
+  status         String    @default("REQUIRED")
+  createdAt      DateTime  @default(now())
+  learner        LiteracyLearner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+model LiteracyGoal {
+  id                  String    @id @default(cuid())
+  publicId            String    @unique
+  learnerId           String
+  name                String
+  category            String
+  targetAmount        Decimal   @db.Decimal(18, 2)
+  currentAmount       Decimal   @default(0) @db.Decimal(18, 2)
+  monthlyContribution Decimal   @default(0) @db.Decimal(18, 2)
+  targetDate          DateTime?
+  priority            String
+  status              String    @default("ACTIVE")
+  createdAt           DateTime  @default(now())
+  learner             LiteracyLearner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+}
+
+model LiteracyHealth {
+  id             String   @id @default(cuid())
+  publicId       String   @unique
+  learnerId      String
+  income         Decimal  @db.Decimal(18, 2)
+  expenses       Decimal  @db.Decimal(18, 2)
+  savings        Decimal  @db.Decimal(18, 2)
+  emergency      Decimal  @db.Decimal(18, 2)
+  debt           Decimal  @db.Decimal(18, 2)
+  debtPayment    Decimal  @db.Decimal(18, 2)
+  insurance      Boolean  @default(false)
+  goals          Int      @default(0)
+  budgetStatus   String
+  savingsStatus  String
+  debtStatus     String
+  resilience     String
+  recommendation String
+  createdAt      DateTime @default(now())
+  learner        LiteracyLearner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+}
+
+model LiteracyEvidence {
+  id                String    @id @default(cuid())
+  publicId          String    @unique
+  learnerId         String
+  enrollmentId      String?
+  productName       String
+  language          String
+  trainerName       String
+  trainingDate      DateTime
+  attendance        Boolean   @default(true)
+  materials         String
+  assessmentScore   Decimal?  @db.Decimal(5, 2)
+  productExplained  Boolean
+  costExplained     Boolean
+  contractExplained Boolean
+  questions         String
+  answers           String
+  confirmed         Boolean
+  reference         String
+  createdAt         DateTime  @default(now())
+  learner           LiteracyLearner     @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  enrollment        LiteracyEnrollment? @relation(fields: [enrollmentId], references: [id])
+
+  @@index([learnerId])
+}
+
+model LiteracyFraud {
+  id           String    @id @default(cuid())
+  publicId     String    @unique
+  learnerName  String
+  accountRef   String?
+  incidentType String
+  incidentDate DateTime
+  amount       Decimal?  @db.Decimal(18, 2)
+  reference    String?
+  channel      String
+  description  String
+  evidence     String?
+  reportedTo   String
+  action       String
+  status       String    @default("REPORTED")
+  createdAt    DateTime  @default(now())
+
+  @@index([status])
+}
+
+model LiteracyFeedback {
+  id             String   @id @default(cuid())
+  publicId       String   @unique
+  learnerId      String
+  courseName     String
+  trainerName    String
+  contentRating  Int
+  trainerRating  Int
+  practicality   Int
+  clarity        Int
+  languageRating Int
+  digitalRating  Int
+  useful         String
+  least          String?
+  suggestions    String?
+  createdAt      DateTime @default(now())
+  learner        LiteracyLearner @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+}
+
+model LiteracyAudit {
+  id        String   @id @default(cuid())
+  publicId  String   @unique
+  learnerId String?
+  action    String
+  actorId   String?
+  actorName String
+  reference String?
+  detail    String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model LiteracyMessage {
+  id          String   @id @default(cuid())
+  publicId    String   @unique
+  learnerId   String?
+  learnerName String
+  kind        String
+  channel     String
+  subject     String
+  message     String
+  sentBy      String
+  status      String
+  sentAt      DateTime @default(now())
+
+  @@index([sentAt])
+}
+
+// ---------------------------------------------------------------------------
+// 40/60 escrow, group collateral and guarantee
+// Cash movement stays on the payment service. These records are the control
+// ledger: escrow balance, collateral value and guarantee exposure stay apart.
+// ---------------------------------------------------------------------------
+
+model EscrowGroup {
+  id                 String   @id @default(cuid())
+  publicId           String   @unique
+  name               String
+  groupType          String
+  registrationNumber String?
+  formationDate      DateTime?
+  purpose            String
+  address            String?
+  district           String?
+  sector             String?
+  contact            String?
+  chairperson        String?
+  secretary          String?
+  treasurer          String?
+  representatives    String?
+  memberCount        Int      @default(0)
+  membershipStatus   String   @default("ACTIVE")
+  documents          Json?
+  status             String   @default("ACTIVE")
+  schoolId           String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  school             School?  @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  members            EscrowGroupMember[]
+  accounts           EscrowAccount[]
+  contributions      EscrowGroupContribution[]
+  pools              CollateralPool[]
+  assets             CollateralAsset[]
+  facilities         SecurityFacility[]
+  applications       SecurityApplication[]
+  guarantees         SecurityGuarantee[]
+  links              SecurityLink[]
+  defaults           SecurityDefault[]
+
+  @@index([schoolId])
+  @@index([status])
+}
+
+model EscrowGroupMember {
+  id                      String   @id @default(cuid())
+  publicId                String   @unique
+  groupId                 String
+  schoolId                String?
+  memberType              String
+  name                    String
+  schoolName              String?
+  membershipNumber        String?
+  contributionPercent     Decimal  @default(0) @db.Decimal(6, 2)
+  contributionAmount      Decimal  @default(0) @db.Decimal(18, 2)
+  votingRights            Boolean  @default(true)
+  guaranteeParticipation  Boolean  @default(true)
+  collateralParticipation Boolean  @default(true)
+  status                  String   @default("ACTIVE")
+  createdAt               DateTime @default(now())
+  group                   EscrowGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  school                  School?  @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  contributions           EscrowContribution[]
+
+  @@index([groupId])
+  @@index([schoolId])
+}
+
+model EscrowAccount {
+  id                    String    @id @default(cuid())
+  publicId              String    @unique
+  accountNumber         String    @unique
+  name                  String
+  accountType           String
+  product               String
+  currency              String    @default("RWF")
+  purpose               String
+  description           String?
+  openingDate           DateTime
+  expectedClosingDate   DateTime?
+  status                String    @default("DRAFT")
+  groupId               String?
+  schoolId              String?
+  institutionId         String?
+  representative        String?
+  signatory             String?
+  contact               String?
+  bankName              String?
+  branch                String?
+  bankAccountNumber     String?
+  bankAccountName       String?
+  settlementAccount     String?
+  paymentReference      String?
+  memberPercent         Decimal   @default(40) @db.Decimal(6, 2)
+  financePercent        Decimal   @default(60) @db.Decimal(6, 2)
+  requiredContribution  Decimal   @default(0) @db.Decimal(18, 2)
+  requiredFinancing     Decimal   @default(0) @db.Decimal(18, 2)
+  minimumBalance        Decimal   @default(0) @db.Decimal(18, 2)
+  maximumBalance        Decimal   @default(0) @db.Decimal(18, 2)
+  contributionFrequency String?
+  allocationRule        String?
+  releaseRule           String?
+  withdrawalRestricted  Boolean   @default(true)
+  approvalRequired      Boolean   @default(true)
+  dualAuthorization     Boolean   @default(false)
+  freezeAllowed         Boolean   @default(true)
+  partialReleaseAllowed Boolean   @default(true)
+  setOffAllowed         Boolean   @default(false)
+  openingBalance        Decimal   @default(0) @db.Decimal(18, 2)
+  contributions         Decimal   @default(0) @db.Decimal(18, 2)
+  transfersIn           Decimal   @default(0) @db.Decimal(18, 2)
+  transfersOut          Decimal   @default(0) @db.Decimal(18, 2)
+  releases              Decimal   @default(0) @db.Decimal(18, 2)
+  refunds               Decimal   @default(0) @db.Decimal(18, 2)
+  adjustments           Decimal   @default(0) @db.Decimal(18, 2)
+  interest              Decimal   @default(0) @db.Decimal(18, 2)
+  fees                  Decimal   @default(0) @db.Decimal(18, 2)
+  frozenAmount          Decimal   @default(0) @db.Decimal(18, 2)
+  restrictedAmount      Decimal   @default(0) @db.Decimal(18, 2)
+  memberComponent       Decimal   @default(0) @db.Decimal(18, 2)
+  financeComponent      Decimal   @default(0) @db.Decimal(18, 2)
+  lastReconciledAt      DateTime?
+  requestedById         String?
+  approvedBy            String?
+  approvedAt            DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  group                 EscrowGroup? @relation(fields: [groupId], references: [id])
+  school                School?   @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  institution           FinancialInstitution? @relation(fields: [institutionId], references: [id], onDelete: SetNull)
+  agreements            EscrowAgreement[]
+  contributionRows      EscrowContribution[]
+  groupContributions    EscrowGroupContribution[]
+  allocations           EscrowAllocation[]
+  movements             EscrowMovement[]
+  freezes               EscrowFreeze[]
+  releaseRows           EscrowRelease[]
+  withdrawals           EscrowWithdrawal[]
+  refundRows            EscrowRefund[]
+  closures              EscrowClosure[]
+  assets                CollateralAsset[]
+  applications          SecurityApplication[]
+  guarantees            SecurityGuarantee[]
+  links                 SecurityLink[]
+  setOffs               EscrowSetOff[]
+  reconciliations       SecurityReconciliation[]
+
+  @@index([groupId])
+  @@index([schoolId])
+  @@index([status])
+}
+
+model EscrowAgreement {
+  id                       String    @id @default(cuid())
+  publicId                 String    @unique
+  accountId                String
+  groupId                  String?
+  parties                  String
+  agent                    String?
+  institutionName          String?
+  purpose                  String
+  amount                   Decimal   @db.Decimal(18, 2)
+  currency                 String    @default("RWF")
+  rule                     String
+  contributionRequirements String?
+  releaseConditions        String?
+  withdrawalConditions     String?
+  defaultConditions        String?
+  terminationConditions    String?
+  disputeResolution        String?
+  effectiveDate            DateTime
+  expiryDate               DateTime?
+  signatures               Json?
+  status                   String    @default("ACTIVE")
+  createdAt                DateTime  @default(now())
+  account                  EscrowAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+}
+
+model EscrowContribution {
+  id                    String    @id @default(cuid())
+  publicId              String    @unique
+  accountId             String
+  memberId              String?
+  memberName            String
+  contributionType      String
+  amount                Decimal   @db.Decimal(18, 2)
+  currency              String    @default("RWF")
+  contributionDate      DateTime
+  paymentMethod         String
+  paymentReference      String?
+  externalTransactionId String?   @unique
+  memberAllocation      Decimal   @default(0) @db.Decimal(18, 2)
+  financeAllocation     Decimal   @default(0) @db.Decimal(18, 2)
+  sourceOfFunds         String?
+  document              String?
+  status                String    @default("RECEIVED")
+  railCode              String?
+  createdAt             DateTime  @default(now())
+  account               EscrowAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  member                EscrowGroupMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  @@index([accountId])
+  @@index([status])
+}
+
+model EscrowGroupContribution {
+  id                   String   @id @default(cuid())
+  publicId             String   @unique
+  groupId              String
+  accountId            String?
+  requiredContribution Decimal  @db.Decimal(18, 2)
+  amountPaid           Decimal  @default(0) @db.Decimal(18, 2)
+  outstanding          Decimal  @default(0) @db.Decimal(18, 2)
+  contributors         Int      @default(0)
+  period               String
+  paymentReference     String?
+  reconciliationStatus String   @default("PENDING")
+  approval             String?
+  remarks              String?
+  createdAt            DateTime @default(now())
+  group                EscrowGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  account              EscrowAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  @@index([groupId])
+}
+
+model EscrowAllocation {
+  id                 String   @id @default(cuid())
+  publicId           String   @unique
+  accountId          String
+  groupId            String?
+  totalAmount        Decimal  @db.Decimal(18, 2)
+  memberAmount       Decimal  @db.Decimal(18, 2)
+  financeAmount      Decimal  @db.Decimal(18, 2)
+  memberPercent      Decimal  @db.Decimal(6, 2)
+  financePercent     Decimal  @db.Decimal(6, 2)
+  allocationDate     DateTime
+  rule               String
+  sourceTransaction  String?
+  destinationAccount String?
+  purpose            String?
+  officer            String?
+  approvalReference  String?
+  status             String   @default("POSTED")
+  createdAt          DateTime @default(now())
+  account            EscrowAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+}
+
+model EscrowMovement {
+  id                    String   @id @default(cuid())
+  publicId              String   @unique
+  accountId             String
+  type                  String
+  transactionDate       DateTime
+  amount                Decimal  @db.Decimal(18, 2)
+  currency              String   @default("RWF")
+  debitAccount          String?
+  creditAccount         String?
+  paymentReference      String?
+  externalTransactionId String?
+  purpose               String?
+  initiatedBy           String?
+  approvedBy            String?
+  reconciliationStatus  String   @default("PENDING")
+  document              String?
+  remarks               String?
+  createdAt             DateTime @default(now())
+  account               EscrowAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([type])
+}
+
+model EscrowFreeze {
+  id             String    @id @default(cuid())
+  publicId       String    @unique
+  accountId      String
+  groupId        String?
+  amount         Decimal   @db.Decimal(18, 2)
+  reason         String
+  authority      String?
+  document       String?
+  startDate      DateTime
+  endDate        DateTime?
+  legalReference String?
+  requestedBy    String?
+  requestedById  String?
+  approvedBy     String?
+  status         String    @default("REQUESTED")
+  createdAt      DateTime  @default(now())
+  account        EscrowAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([status])
+}
+
+model EscrowRelease {
+  id                    String    @id @default(cuid())
+  publicId              String    @unique
+  accountId             String
+  groupId               String?
+  requestedAmount       Decimal   @db.Decimal(18, 2)
+  fromRestricted        Boolean   @default(false)
+  purpose               String
+  beneficiary           String
+  destinationAccount    String
+  documents             Json?
+  requestedBy           String?
+  requestedById         String?
+  requestedDate         DateTime
+  approvalRequired      Boolean   @default(true)
+  approvedBy            String?
+  releaseDate           DateTime?
+  status                String    @default("REQUESTED")
+  paymentReference      String?
+  externalTransactionId String?   @unique
+  railCode              String?
+  createdAt             DateTime  @default(now())
+  account               EscrowAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([status])
+}
+
+model EscrowWithdrawal {
+  id                    String   @id @default(cuid())
+  publicId              String   @unique
+  accountId             String
+  groupId               String?
+  amount                Decimal  @db.Decimal(18, 2)
+  reason                String
+  beneficiary           String
+  destinationAccount    String
+  minimumAfter          Decimal  @default(0) @db.Decimal(18, 2)
+  approval              String?
+  requestedById         String?
+  paymentReference      String?
+  externalTransactionId String?  @unique
+  status                String   @default("POSTED")
+  railCode              String?
+  createdAt             DateTime @default(now())
+  account               EscrowAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+}
+
+model EscrowRefund {
+  id                    String   @id @default(cuid())
+  publicId              String   @unique
+  accountId             String
+  originalTransaction   String?
+  amount                Decimal  @db.Decimal(18, 2)
+  reason                String
+  beneficiary           String
+  destinationAccount    String?
+  approval              String?
+  paymentReference      String?
+  externalTransactionId String?  @unique
+  refundDate            DateTime
+  status                String   @default("POSTED")
+  railCode              String?
+  createdAt             DateTime @default(now())
+  account               EscrowAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+}
+
+model EscrowClosure {
+  id                 String    @id @default(cuid())
+  publicId           String    @unique
+  accountId          String
+  groupId            String?
+  reason             String
+  closingBalance     Decimal   @db.Decimal(18, 2)
+  obligations        String?
+  restrictedAmount   Decimal   @default(0) @db.Decimal(18, 2)
+  pendingClaims      Int       @default(0)
+  pendingReleases    Int       @default(0)
+  settlementAmount   Decimal   @default(0) @db.Decimal(18, 2)
+  destinationAccount String?
+  approvedBy         String?
+  closureDate        DateTime?
+  status             String    @default("CLOSED")
+  createdAt          DateTime  @default(now())
+  account            EscrowAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+}
+
+model CollateralPool {
+  id             String    @id @default(cuid())
+  publicId       String    @unique
+  groupId        String
+  name           String
+  purpose        String
+  haircutPercent Decimal   @default(80) @db.Decimal(6, 2)
+  encumbrance    Decimal   @default(0) @db.Decimal(18, 2)
+  reviewDate     DateTime?
+  status         String    @default("ACTIVE")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  group          EscrowGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  assets         CollateralAsset[]
+  links          SecurityLink[]
+  enforcements   CollateralEnforcement[]
+
+  @@index([groupId])
+}
+
+model CollateralAsset {
+  id                   String    @id @default(cuid())
+  publicId             String    @unique
+  groupId              String
+  poolId               String?
+  accountId            String?
+  schoolId             String?
+  collateralType       String
+  description          String
+  owner                String
+  coOwners             String?
+  ownershipPercent     Decimal   @default(100) @db.Decimal(6, 2)
+  location             String?
+  registrationNumber   String?
+  acquisitionDate      DateTime?
+  acquisitionCost      Decimal?  @db.Decimal(18, 2)
+  marketValue          Decimal   @default(0) @db.Decimal(18, 2)
+  forcedSaleValue      Decimal   @default(0) @db.Decimal(18, 2)
+  valuationDate        DateTime?
+  valuer               String?
+  haircutPercent       Decimal   @default(80) @db.Decimal(6, 2)
+  ownershipDocument    String?
+  insurance            String?
+  insuranceExpiry      DateTime?
+  encumbrance          Decimal   @default(0) @db.Decimal(18, 2)
+  lienStatus           String    @default("NONE")
+  securityRegistration String?
+  countsAsCollateral   Boolean   @default(true)
+  status               String    @default("PROPOSED")
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  group                EscrowGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  pool                 CollateralPool? @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  account              EscrowAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  school               School?   @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  valuations           CollateralValuation[]
+  verifications        CollateralVerification[]
+  liens                CollateralLien[]
+  releases             CollateralRelease[]
+  substitutionsOut     CollateralSubstitution[] @relation("ExistingCollateral")
+  substitutionsIn      CollateralSubstitution[] @relation("ReplacementCollateral")
+  watches              CollateralWatch[]
+  realizations         CollateralRealization[]
+  applications         SecurityApplication[]
+  guarantees           SecurityGuarantee[]
+
+  @@index([groupId])
+  @@index([poolId])
+  @@index([status])
+}
+
+model CollateralValuation {
+  id                 String    @id @default(cuid())
+  publicId           String    @unique
+  assetId            String
+  assetType          String
+  marketValue        Decimal   @db.Decimal(18, 2)
+  forcedSaleValue    Decimal   @db.Decimal(18, 2)
+  replacementValue   Decimal?  @db.Decimal(18, 2)
+  method             String
+  valuer             String
+  valuerRegistration String?
+  valuationDate      DateTime
+  report             String?
+  reviewDate         DateTime?
+  approvedValue      Decimal   @db.Decimal(18, 2)
+  reviewer           String?
+  comments           String?
+  createdAt          DateTime  @default(now())
+  asset              CollateralAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+}
+
+model CollateralVerification {
+  id                   String   @id @default(cuid())
+  publicId             String   @unique
+  assetId              String
+  ownershipVerified    Boolean  @default(false)
+  registrationVerified Boolean  @default(false)
+  physicalVerification Boolean  @default(false)
+  lienCheck            Boolean  @default(false)
+  insuranceVerified    Boolean  @default(false)
+  valuationVerified    Boolean  @default(false)
+  legalVerified        Boolean  @default(false)
+  officer              String?
+  verificationDate     DateTime
+  result               String
+  comments             String?
+  createdAt            DateTime @default(now())
+  asset                CollateralAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+}
+
+model CollateralLien {
+  id                 String    @id @default(cuid())
+  publicId           String    @unique
+  assetId            String
+  loanId             String?
+  guaranteeId        String?
+  institutionName    String?
+  securedAmount      Decimal   @db.Decimal(18, 2)
+  registrationNumber String?
+  registrationDate   DateTime?
+  priority           Int       @default(1)
+  expiryDate         DateTime?
+  releaseConditions  String?
+  status             String    @default("ACTIVE")
+  createdAt          DateTime  @default(now())
+  asset              CollateralAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  loan               Loan?     @relation(fields: [loanId], references: [id], onDelete: SetNull)
+
+  @@index([assetId])
+  @@index([loanId])
+}
+
+model CollateralRelease {
+  id                String    @id @default(cuid())
+  publicId          String    @unique
+  assetId           String
+  loanId            String?
+  groupId           String?
+  exposure          Decimal   @default(0) @db.Decimal(18, 2)
+  reason            String
+  approval          String?
+  requestedById     String?
+  releaseDate       DateTime?
+  registryReference String?
+  documents         Json?
+  status            String    @default("RELEASED")
+  createdAt         DateTime  @default(now())
+  asset             CollateralAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  loan              Loan?     @relation(fields: [loanId], references: [id], onDelete: SetNull)
+
+  @@index([assetId])
+}
+
+model CollateralSubstitution {
+  id               String   @id @default(cuid())
+  publicId         String   @unique
+  existingId       String
+  replacementId    String
+  existingValue    Decimal  @db.Decimal(18, 2)
+  replacementValue Decimal  @db.Decimal(18, 2)
+  reason           String
+  loanExposure     Decimal  @default(0) @db.Decimal(18, 2)
+  coverageBefore   Decimal  @default(0) @db.Decimal(8, 2)
+  coverageAfter    Decimal  @default(0) @db.Decimal(8, 2)
+  approval         String?
+  effectiveDate    DateTime
+  createdAt        DateTime @default(now())
+  existing         CollateralAsset @relation("ExistingCollateral", fields: [existingId], references: [id])
+  replacement      CollateralAsset @relation("ReplacementCollateral", fields: [replacementId], references: [id])
+
+  @@index([existingId])
+  @@index([replacementId])
+}
+
+model CollateralWatch {
+  id                String    @id @default(cuid())
+  publicId          String    @unique
+  assetId           String
+  currentValue      Decimal   @db.Decimal(18, 2)
+  previousValue     Decimal   @db.Decimal(18, 2)
+  valuationDate     DateTime
+  insuranceStatus   String
+  physicalCondition String?
+  ownershipStatus   String?
+  encumbrance       Decimal   @default(0) @db.Decimal(18, 2)
+  coverageRatio     Decimal   @default(0) @db.Decimal(8, 2)
+  reviewRequired    Boolean   @default(false)
+  nextReviewDate    DateTime?
+  officer           String?
+  comments          String?
+  createdAt         DateTime  @default(now())
+  asset             CollateralAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+}
+
+model CollateralRealization {
+  id            String    @id @default(cuid())
+  publicId      String    @unique
+  assetId       String
+  loanId        String?
+  groupId       String?
+  defaultCaseId String?
+  approvedValue Decimal   @db.Decimal(18, 2)
+  realizedValue Decimal   @db.Decimal(18, 2)
+  costs         Decimal   @default(0) @db.Decimal(18, 2)
+  netRecovery   Decimal   @db.Decimal(18, 2)
+  saleDate      DateTime?
+  buyer         String?
+  saleReference String?
+  approval      String?
+  allocation    String?
+  createdAt     DateTime  @default(now())
+  asset         CollateralAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  loan          Loan?     @relation(fields: [loanId], references: [id], onDelete: SetNull)
+
+  @@index([assetId])
+}
+
+model CollateralEnforcement {
+  id                  String   @id @default(cuid())
+  publicId            String   @unique
+  poolId              String?
+  groupId             String?
+  loanId              String?
+  defaultCaseId       String?
+  reason              String
+  legalReference      String?
+  assetName           String?
+  value               Decimal  @default(0) @db.Decimal(18, 2)
+  enforcementDate     DateTime
+  officer             String?
+  legalRepresentative String?
+  status              String   @default("OPEN")
+  recoveryAmount      Decimal  @default(0) @db.Decimal(18, 2)
+  createdAt           DateTime @default(now())
+  pool                CollateralPool? @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  loan                Loan?    @relation(fields: [loanId], references: [id], onDelete: SetNull)
+
+  @@index([poolId])
+}
+
+model SecurityFacility {
+  id                String    @id @default(cuid())
+  publicId          String    @unique
+  facilityNumber    String    @unique
+  name              String
+  institutionId     String?
+  groupId           String?
+  facilityType      String
+  approvedLimit     Decimal   @db.Decimal(18, 2)
+  currency          String    @default("RWF")
+  guaranteePercent  Decimal   @db.Decimal(6, 2)
+  maximumAmount     Decimal   @db.Decimal(18, 2)
+  feeRate           Decimal   @default(0) @db.Decimal(6, 3)
+  effectiveDate     DateTime
+  expiryDate        DateTime?
+  terms             String?
+  dualAuthorization Boolean   @default(false)
+  status            String    @default("DRAFT")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  institution       FinancialInstitution? @relation(fields: [institutionId], references: [id], onDelete: SetNull)
+  group             EscrowGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  applications      SecurityApplication[]
+  guarantees        SecurityGuarantee[]
+  links             SecurityLink[]
+
+  @@index([groupId])
+  @@index([status])
+}
+
+model SecurityApplication {
+  id                 String    @id @default(cuid())
+  publicId           String    @unique
+  applicant          String
+  groupId            String?
+  schoolId           String?
+  loanApplicationId  String?
+  product            String?
+  requestedLoan      Decimal   @db.Decimal(18, 2)
+  requestedGuarantee Decimal   @db.Decimal(18, 2)
+  guaranteePercent   Decimal   @db.Decimal(6, 2)
+  purpose            String
+  facilityId         String?
+  assetId            String?
+  accountId          String?
+  contribution       Decimal   @default(0) @db.Decimal(18, 2)
+  riskInformation    String?
+  documents          Json?
+  requestedDate      DateTime
+  status             String    @default("SUBMITTED")
+  requestedById      String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  group              EscrowGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  school             School?   @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  loanApplication    LoanApplication? @relation(fields: [loanApplicationId], references: [id], onDelete: SetNull)
+  facility           SecurityFacility? @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+  asset              CollateralAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  account            EscrowAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  eligibility        SecurityEligibility?
+  assessment         SecurityAssessment?
+  decision           SecurityDecision?
+  guarantee          SecurityGuarantee?
+
+  @@index([groupId])
+  @@index([facilityId])
+  @@index([status])
+}
+
+model SecurityEligibility {
+  id                    String   @id @default(cuid())
+  publicId              String   @unique
+  applicationId         String   @unique
+  applicantEligibility  Boolean
+  membershipStatus      String
+  contributionStatus    String
+  escrowRequirementMet  Boolean
+  loanEligibility       Boolean
+  collateralRequirement Boolean
+  financialCriteria     Boolean
+  existingGuarantee     Decimal  @default(0) @db.Decimal(18, 2)
+  existingLoan          Decimal  @default(0) @db.Decimal(18, 2)
+  groupExposure         Decimal  @default(0) @db.Decimal(18, 2)
+  concentrationLimit    Decimal  @default(0) @db.Decimal(18, 2)
+  result                String
+  reviewer              String?
+  reviewedAt            DateTime
+  notes                 String?
+  application           SecurityApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model SecurityAssessment {
+  id                 String   @id @default(cuid())
+  publicId           String   @unique
+  applicationId      String   @unique
+  loanAmount         Decimal  @db.Decimal(18, 2)
+  requestedGuarantee Decimal  @db.Decimal(18, 2)
+  existingExposure   Decimal  @default(0) @db.Decimal(18, 2)
+  escrowBalance      Decimal  @default(0) @db.Decimal(18, 2)
+  collateralValue    Decimal  @default(0) @db.Decimal(18, 2)
+  repaymentCapacity  String?
+  riskFactors        String?
+  mitigation         String?
+  recommended        Decimal  @db.Decimal(18, 2)
+  conditions         String?
+  result             String
+  assessor           String?
+  assessedAt         DateTime
+  application        SecurityApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model SecurityDecision {
+  id               String    @id @default(cuid())
+  publicId         String    @unique
+  applicationId    String    @unique
+  facilityId       String?
+  requestedAmount  Decimal   @db.Decimal(18, 2)
+  approvedAmount   Decimal   @default(0) @db.Decimal(18, 2)
+  guaranteePercent Decimal   @db.Decimal(6, 2)
+  fee              Decimal   @default(0) @db.Decimal(18, 2)
+  effectiveDate    DateTime?
+  expiryDate       DateTime?
+  conditions       String?
+  decision         String
+  decisionMaker    String?
+  decisionMakerId  String?
+  institutionName  String?
+  decisionDate     DateTime
+  reference        String?
+  application      SecurityApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model SecurityGuarantee {
+  id                  String    @id @default(cuid())
+  publicId            String    @unique
+  certificateNumber   String?   @unique
+  facilityId          String?
+  applicationId       String?   @unique
+  applicant           String
+  groupId             String?
+  schoolId            String?
+  institutionId       String?
+  loanApplicationId   String?
+  loanPublicId        String?
+  guaranteedPrincipal Decimal   @db.Decimal(18, 2)
+  guaranteePercent    Decimal   @db.Decimal(6, 2)
+  maximumLiability    Decimal   @db.Decimal(18, 2)
+  fee                 Decimal   @default(0) @db.Decimal(18, 2)
+  effectiveDate       DateTime
+  expiryDate          DateTime?
+  conditions          String?
+  assetId             String?
+  accountId           String?
+  claimsPaid          Decimal   @default(0) @db.Decimal(18, 2)
+  recoveries          Decimal   @default(0) @db.Decimal(18, 2)
+  legacyGuaranteeId   String?
+  status              String    @default("ACTIVE")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  facility            SecurityFacility? @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+  application         SecurityApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  group               EscrowGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  school              School?   @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  institution         FinancialInstitution? @relation(fields: [institutionId], references: [id], onDelete: SetNull)
+  loanApplication     LoanApplication? @relation(fields: [loanApplicationId], references: [id], onDelete: SetNull)
+  asset               CollateralAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  account             EscrowAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  certificate         SecurityCertificate?
+  fees                SecurityFee[]
+  renewals            SecurityRenewal[]
+  amendments          SecurityAmendment[]
+  claims              SecurityClaim[]
+  cancellation        SecurityCancellation?
+
+  @@index([facilityId])
+  @@index([groupId])
+  @@index([status])
+}
+
+model SecurityCertificate {
+  id                 String    @id @default(cuid())
+  publicId           String    @unique
+  certificateNumber  String    @unique
+  guaranteeId        String    @unique
+  loanPublicId       String?
+  applicant          String
+  groupName          String?
+  lender             String?
+  guaranteedAmount   Decimal   @db.Decimal(18, 2)
+  guaranteePercent   Decimal   @db.Decimal(6, 2)
+  originalLoanAmount Decimal   @default(0) @db.Decimal(18, 2)
+  effectiveDate      DateTime
+  expiryDate         DateTime?
+  conditions         String?
+  claimConditions    String?
+  signatory          String?
+  signature          String?
+  createdAt          DateTime  @default(now())
+  guarantee          SecurityGuarantee @relation(fields: [guaranteeId], references: [id], onDelete: Cascade)
+}
+
+model SecurityFee {
+  id               String    @id @default(cuid())
+  publicId         String    @unique
+  guaranteeId      String
+  feeType          String
+  rate             Decimal   @default(0) @db.Decimal(6, 3)
+  baseAmount       Decimal   @db.Decimal(18, 2)
+  calculatedFee    Decimal   @db.Decimal(18, 2)
+  dueDate          DateTime?
+  paymentStatus    String    @default("DUE")
+  paymentReference String?
+  waiver           Boolean   @default(false)
+  approval         String?
+  createdAt        DateTime  @default(now())
+  guarantee        SecurityGuarantee @relation(fields: [guaranteeId], references: [id], onDelete: Cascade)
+
+  @@index([guaranteeId])
+}
+
+model SecurityRenewal {
+  id                String    @id @default(cuid())
+  publicId          String    @unique
+  guaranteeId       String
+  currentExpiry     DateTime?
+  requestedExpiry   DateTime
+  currentExposure   Decimal   @db.Decimal(18, 2)
+  updatedExposure   Decimal   @db.Decimal(18, 2)
+  updatedCollateral Decimal   @default(0) @db.Decimal(18, 2)
+  updatedEscrow     Decimal   @default(0) @db.Decimal(18, 2)
+  renewalFee        Decimal   @default(0) @db.Decimal(18, 2)
+  reason            String
+  approval          String?
+  requestedById     String?
+  newCertificate    String?
+  createdAt         DateTime  @default(now())
+  guarantee         SecurityGuarantee @relation(fields: [guaranteeId], references: [id], onDelete: Cascade)
+
+  @@index([guaranteeId])
+}
+
+model SecurityAmendment {
+  id              String    @id @default(cuid())
+  publicId        String    @unique
+  guaranteeId     String
+  originalTerms   String?
+  requestedChange String
+  newAmount       Decimal?  @db.Decimal(18, 2)
+  newExpiry       DateTime?
+  newPercent      Decimal?  @db.Decimal(6, 2)
+  reason          String
+  documents       Json?
+  approval        String?
+  requestedById   String?
+  effectiveDate   DateTime
+  createdAt       DateTime  @default(now())
+  guarantee       SecurityGuarantee @relation(fields: [guaranteeId], references: [id], onDelete: Cascade)
+
+  @@index([guaranteeId])
+}
+
+model SecurityClaim {
+  id                   String    @id @default(cuid())
+  publicId             String    @unique
+  guaranteeId          String
+  certificateNumber    String?
+  loanId               String?
+  borrower             String
+  groupId              String?
+  lender               String?
+  defaultDate          DateTime?
+  outstandingPrincipal Decimal   @default(0) @db.Decimal(18, 2)
+  outstandingInterest  Decimal   @default(0) @db.Decimal(18, 2)
+  otherAmount          Decimal   @default(0) @db.Decimal(18, 2)
+  guaranteedAmount     Decimal   @default(0) @db.Decimal(18, 2)
+  amountClaimed        Decimal   @db.Decimal(18, 2)
+  eligibleAmount       Decimal   @default(0) @db.Decimal(18, 2)
+  approvedAmount       Decimal   @default(0) @db.Decimal(18, 2)
+  rejectedAmount       Decimal   @default(0) @db.Decimal(18, 2)
+  reason               String
+  recoveryActions      String?
+  documents            Json?
+  claimDate            DateTime
+  guaranteeValid       Boolean   @default(false)
+  certificateValid     Boolean   @default(false)
+  loanValid            Boolean   @default(false)
+  defaultVerified      Boolean   @default(false)
+  assessmentResult     String?
+  assessor             String?
+  assessedAt           DateTime?
+  approver             String?
+  approverId           String?
+  approvalDate         DateTime?
+  approvalReason       String?
+  conditions           String?
+  paymentReference     String?
+  status               String    @default("SUBMITTED")
+  requestedById        String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  guarantee            SecurityGuarantee @relation(fields: [guaranteeId], references: [id], onDelete: Cascade)
+  loan                 Loan?     @relation(fields: [loanId], references: [id], onDelete: SetNull)
+  payments             SecurityClaimPayment[]
+  recoveries           SecurityRecovery[]
+
+  @@index([guaranteeId])
+  @@index([status])
+}
+
+model SecurityClaimPayment {
+  id                    String   @id @default(cuid())
+  publicId              String   @unique
+  claimId               String
+  payee                 String
+  amount                Decimal  @db.Decimal(18, 2)
+  currency              String   @default("RWF")
+  bankAccount           String
+  paymentMethod         String
+  paymentReference      String?
+  externalTransactionId String?  @unique
+  paymentDate           DateTime
+  status                String   @default("PAID")
+  railCode              String?
+  requestedById         String?
+  createdAt             DateTime @default(now())
+  claim                 SecurityClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([claimId])
+}
+
+model SecurityRecovery {
+  id                    String    @id @default(cuid())
+  publicId              String    @unique
+  claimId               String
+  loanId                String?
+  groupId               String?
+  borrower              String
+  claimPaid             Decimal   @default(0) @db.Decimal(18, 2)
+  amount                Decimal   @db.Decimal(18, 2)
+  source                String
+  recoveryDate          DateTime
+  outstanding           Decimal   @default(0) @db.Decimal(18, 2)
+  officer               String?
+  action                String?
+  status                String    @default("RECEIVED")
+  externalTransactionId String?   @unique
+  railCode              String?
+  createdAt             DateTime  @default(now())
+  claim                 SecurityClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  loan                  Loan?     @relation(fields: [loanId], references: [id], onDelete: SetNull)
+  split                 SecurityRecoverySplit?
+
+  @@index([claimId])
+}
+
+model SecurityRecoverySplit {
+  id                String   @id @default(cuid())
+  publicId          String   @unique
+  recoveryId        String   @unique
+  amountRecovered   Decimal  @db.Decimal(18, 2)
+  principal         Decimal  @default(0) @db.Decimal(18, 2)
+  interest          Decimal  @default(0) @db.Decimal(18, 2)
+  fees              Decimal  @default(0) @db.Decimal(18, 2)
+  costs             Decimal  @default(0) @db.Decimal(18, 2)
+  remainingClaim    Decimal  @default(0) @db.Decimal(18, 2)
+  remainingExposure Decimal  @default(0) @db.Decimal(18, 2)
+  approvedBy        String?
+  splitDate         DateTime
+  recovery          SecurityRecovery @relation(fields: [recoveryId], references: [id], onDelete: Cascade)
+}
+
+model SecurityCancellation {
+  id               String   @id @default(cuid())
+  publicId         String   @unique
+  guaranteeId      String   @unique
+  reason           String
+  currentExposure  Decimal  @db.Decimal(18, 2)
+  unusedGuarantee  Decimal  @default(0) @db.Decimal(18, 2)
+  claims           Decimal  @default(0) @db.Decimal(18, 2)
+  recovery         Decimal  @default(0) @db.Decimal(18, 2)
+  document         String?
+  requestedBy      String?
+  requestedById    String?
+  approvedBy       String?
+  cancellationDate DateTime
+  guarantee        SecurityGuarantee @relation(fields: [guaranteeId], references: [id], onDelete: Cascade)
+}
+
+model SecurityLink {
+  id                 String   @id @default(cuid())
+  publicId           String   @unique
+  groupId            String?
+  accountId          String?
+  poolId             String?
+  facilityId         String?
+  loanApplicationId  String?
+  loanId             String?
+  memberContribution Decimal  @default(0) @db.Decimal(18, 2)
+  financeComponent   Decimal  @default(0) @db.Decimal(18, 2)
+  collateralValue    Decimal  @default(0) @db.Decimal(18, 2)
+  guaranteedAmount   Decimal  @default(0) @db.Decimal(18, 2)
+  exposure           Decimal  @default(0) @db.Decimal(18, 2)
+  status             String   @default("ACTIVE")
+  createdAt          DateTime @default(now())
+  group              EscrowGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  account            EscrowAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  pool               CollateralPool? @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  facility           SecurityFacility? @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+  loanApplication    LoanApplication? @relation(fields: [loanApplicationId], references: [id], onDelete: SetNull)
+  loan               Loan?    @relation(fields: [loanId], references: [id], onDelete: SetNull)
+
+  @@index([groupId])
+  @@index([accountId])
+}
+
+model SecurityDefault {
+  id                String   @id @default(cuid())
+  publicId          String   @unique
+  groupId           String?
+  loanId            String?
+  loanIds           String?
+  borrower          String
+  defaultDate       DateTime
+  dpd               Int      @default(0)
+  principal         Decimal  @default(0) @db.Decimal(18, 2)
+  interest          Decimal  @default(0) @db.Decimal(18, 2)
+  fees              Decimal  @default(0) @db.Decimal(18, 2)
+  guaranteeExposure Decimal  @default(0) @db.Decimal(18, 2)
+  collateralValue   Decimal  @default(0) @db.Decimal(18, 2)
+  escrowAvailable   Decimal  @default(0) @db.Decimal(18, 2)
+  strategy          String?
+  officer           String?
+  status            String   @default("OPEN")
+  createdAt         DateTime @default(now())
+  group             EscrowGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  loan              Loan?    @relation(fields: [loanId], references: [id], onDelete: SetNull)
+
+  @@index([groupId])
+  @@index([status])
+}
+
+model EscrowSetOff {
+  id                    String   @id @default(cuid())
+  publicId              String   @unique
+  accountId             String
+  groupId               String?
+  loanId                String?
+  defaultCaseId         String?
+  availableEscrow       Decimal  @default(0) @db.Decimal(18, 2)
+  restrictedEscrow      Decimal  @default(0) @db.Decimal(18, 2)
+  requestedAmount       Decimal  @db.Decimal(18, 2)
+  approvedAmount        Decimal  @default(0) @db.Decimal(18, 2)
+  reason                String
+  authority             String
+  approval              String?
+  requestedById         String?
+  paymentReference      String?
+  externalTransactionId String?  @unique
+  status                String   @default("POSTED")
+  createdAt             DateTime @default(now())
+  account               EscrowAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  loan                  Loan?    @relation(fields: [loanId], references: [id], onDelete: SetNull)
+
+  @@index([accountId])
+}
+
+model SecurityReconciliation {
+  id               String   @id @default(cuid())
+  publicId         String   @unique
+  accountId        String?
+  transactionDate  DateTime
+  internalId       String?
+  externalId       String?
+  amount           Decimal  @db.Decimal(18, 2)
+  paymentReference String?
+  bankName         String?
+  expectedAmount   Decimal  @db.Decimal(18, 2)
+  actualAmount     Decimal  @db.Decimal(18, 2)
+  difference       Decimal  @db.Decimal(18, 2)
+  matchStatus      String
+  exceptionReason  String?
+  reviewedBy       String?
+  resolution       String?
+  createdAt        DateTime @default(now())
+  account          EscrowAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  @@index([accountId])
+  @@index([matchStatus])
+}
+
+model SecurityDocument {
+  id                 String    @id @default(cuid())
+  publicId           String    @unique
+  entityType         String
+  entityId           String
+  documentType       String
+  documentNumber     String?
+  issueDate          DateTime?
+  expiryDate         DateTime?
+  fileName           String
+  verificationStatus String    @default("PENDING")
+  verifiedBy         String?
+  verificationDate   DateTime?
+  comments           String?
+  createdAt          DateTime  @default(now())
+
+  @@index([entityType, entityId])
+}
+
+model SecurityApproval {
+  id              String   @id @default(cuid())
+  publicId        String   @unique
+  entityType      String
+  entityId        String
+  stage           String
+  requestedAction String
+  level           String
+  approver        String?
+  approverId      String?
+  decision        String
+  comments        String?
+  signedAt        DateTime
+  signature       String?
+  auditReference  String?
+  createdAt       DateTime @default(now())
+
+  @@index([entityType, entityId])
+}
+
+model SecurityAudit {
+  id                String   @id @default(cuid())
+  publicId          String   @unique
+  entityType        String
+  entityId          String
+  userId            String?
+  institution       String?
+  action            String
+  previousValue     String?
+  newValue          String?
+  previousStatus    String?
+  newStatus         String?
+  amount            Decimal? @db.Decimal(18, 2)
+  reason            String?
+  approvalReference String?
+  requestId         String?
+  correlationId     String?
+  ip                String?
+  createdAt         DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model SecurityNotice {
+  id        String   @id @default(cuid())
+  publicId  String   @unique
+  event     String
+  channel   String
+  subject   String
+  body      String
+  status    String   @default("QUEUED")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+// ---------------------------------------------------------------------------
+// Membership — institution member, application, fee, certificate, lifecycle
+// ---------------------------------------------------------------------------
+
+model MembershipCategory {
+  id               String   @id @default(cuid())
+  publicId         String   @unique
+  code             String   @unique
+  name             String
+  description      String?
+  eligibility      String?
+  membershipFee    Decimal  @db.Decimal(18, 2)
+  renewalFee       Decimal  @db.Decimal(18, 2)
+  periodMonths     Int      @default(12)
+  currency         String   @default("RWF")
+  status           String   @default("ACTIVE")
+  effectiveDate    DateTime
+  approvalRequired Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  requirements MembershipRequirement[]
+  members      Member[]
+}
+
+model MembershipRequirement {
+  id                   String             @id @default(cuid())
+  publicId             String             @unique
+  categoryId           String
+  documentType         String
+  mandatory            Boolean            @default(true)
+  verificationRequired Boolean            @default(true)
+  category             MembershipCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, documentType])
+}
+
+model Member {
+  id                            String    @id @default(cuid())
+  publicId                      String    @unique
+  membershipNumber              String?   @unique
+  schoolId                      String?   @unique
+  categoryId                    String?
+  membershipType                String
+  institutionName               String
+  registrationNumber            String
+  institutionType               String
+  dateEstablished               DateTime?
+  studentCount                  Int?
+  staffCount                    Int?
+  province                      String
+  district                      String
+  sector                        String
+  cell                          String
+  village                       String?
+  physicalAddress               String
+  phone                         String
+  email                         String
+  website                       String?
+  postalAddress                 String?
+  alternativePhone              String?
+  registrationCertificateNumber String
+  registrationDate              DateTime?
+  taxIdentificationNumber       String?
+  issuingAuthority              String?
+  bankName                      String?
+  bankAccountName               String?
+  bankAccountNumber             String?
+  bankBranch                    String?
+  currency                      String    @default("RWF")
+  representativeName            String
+  representativePosition        String
+  representativeNationalId      String?
+  representativePhone           String
+  representativeEmail           String
+  status                        String    @default("DRAFT")
+  startDate                     DateTime?
+  expiryDate                    DateTime?
+  createdAt                     DateTime  @default(now())
+  updatedAt                     DateTime  @updatedAt
+
+  school         School?              @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  category       MembershipCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  applications   MemberApplication[]
+  documents      MemberDocument[]
+  verifications  MemberVerification[]
+  decisions      MemberDecision[]
+  fees           MembershipFee[]
+  payments       MembershipFeePayment[]
+  certificates   MembershipCertificate[]
+  renewals       MembershipRenewal[]
+  changes        MemberChange[]
+  suspensions    MembershipSuspension[]
+  reactivations  MembershipReactivation[]
+  terminations   MembershipTermination[]
+
+  @@index([status])
+  @@index([registrationNumber])
+  @@index([email])
+}
+
+model MemberApplication {
+  id               String   @id @default(cuid())
+  publicId         String   @unique
+  memberId         String
+  categoryCode     String
+  requestedType    String
+  applicationDate  DateTime
+  reason           String
+  referredBy       String?
+  accurate         Boolean
+  termsAccepted    Boolean
+  verifyAuthorized Boolean
+  status           String   @default("SUBMITTED")
+  createdAt        DateTime @default(now())
+  member           Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model MemberDocument {
+  id              String    @id @default(cuid())
+  publicId        String    @unique
+  memberId        String
+  documentType    String
+  documentNumber  String?
+  issueDate       DateTime?
+  expiryDate      DateTime?
+  issuingAuthority String?
+  fileName        String
+  storedName      String?
+  status          String    @default("PENDING")
+  comment         String?
+  verifiedBy      String?
+  verifiedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  member          Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
+}
+
+model MemberVerification {
+  id                      String   @id @default(cuid())
+  publicId                String   @unique
+  memberId                String
+  registrationVerified    Boolean  @default(false)
+  nameVerified            Boolean  @default(false)
+  numberVerified          Boolean  @default(false)
+  addressVerified         Boolean  @default(false)
+  legalVerified           Boolean  @default(false)
+  identityVerified        Boolean  @default(false)
+  authorityVerified       Boolean  @default(false)
+  contactVerified         Boolean  @default(false)
+  bankVerified            Boolean  @default(false)
+  bankBelongsToInstitution Boolean @default(false)
+  result                  String
+  officerId               String?
+  officerName             String
+  reviewedAt              DateTime
+  comments                String?
+  member                  Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model MemberDecision {
+  id         String   @id @default(cuid())
+  publicId   String   @unique
+  memberId   String
+  decision   String
+  comment    String?
+  conditions String?
+  officerId  String?
+  officerName String
+  decidedAt  DateTime
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model MembershipFee {
+  id            String   @id @default(cuid())
+  publicId      String   @unique
+  memberId      String
+  feeType       String
+  financialYear String
+  amount        Decimal  @db.Decimal(18, 2)
+  discount      Decimal  @default(0) @db.Decimal(18, 2)
+  penalty       Decimal  @default(0) @db.Decimal(18, 2)
+  totalPayable  Decimal  @db.Decimal(18, 2)
+  currency      String   @default("RWF")
+  dueDate       DateTime?
+  status        String   @default("DUE")
+  createdAt     DateTime @default(now())
+  member        Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  payments      MembershipFeePayment[]
+
+  @@index([memberId])
+  @@index([status])
+}
+
+model MembershipFeePayment {
+  id                    String   @id @default(cuid())
+  publicId              String   @unique
+  memberId              String
+  feeId                 String
+  amount                Decimal  @db.Decimal(18, 2)
+  currency              String   @default("RWF")
+  paymentMethod         String
+  payerName             String
+  payerPhone            String?
+  paymentReference      String?
+  externalTransactionId String?  @unique
+  railCode              String?
+  paymentDate           DateTime
+  status                String
+  reconciliationStatus  String   @default("PENDING")
+  createdAt             DateTime @default(now())
+  member                Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  fee                   MembershipFee @relation(fields: [feeId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
+}
+
+model MembershipCertificate {
+  id                String   @id @default(cuid())
+  publicId          String   @unique
+  certificateNumber String   @unique
+  memberId          String
+  institutionName   String
+  registrationNumber String
+  categoryName      String
+  membershipNumber  String
+  startDate         DateTime
+  expiryDate        DateTime
+  issuedAt          DateTime
+  signatory         String
+  member            Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model MembershipRenewal {
+  id                 String   @id @default(cuid())
+  publicId           String   @unique
+  memberId           String
+  currentExpiry      DateTime?
+  newExpiry          DateTime?
+  renewalFee         Decimal  @db.Decimal(18, 2)
+  outstanding        Decimal  @db.Decimal(18, 2)
+  discount           Decimal  @default(0) @db.Decimal(18, 2)
+  penalty            Decimal  @default(0) @db.Decimal(18, 2)
+  totalPayable       Decimal  @db.Decimal(18, 2)
+  informationConfirmed Boolean
+  documentsValid     Boolean
+  requirementsMet    Boolean
+  feePaid            Boolean
+  status             String
+  createdAt          DateTime @default(now())
+  member             Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model MemberChange {
+  id            String   @id @default(cuid())
+  publicId      String   @unique
+  memberId      String
+  previousValue Json
+  newValue      Json
+  reason        String
+  requestedBy   String
+  approvedBy    String
+  createdAt     DateTime @default(now())
+  member        Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model MembershipSuspension {
+  id           String    @id @default(cuid())
+  publicId     String    @unique
+  memberId     String
+  decision     String
+  reason       String
+  effectiveDate DateTime
+  reviewDate   DateTime?
+  evidence     String?
+  comments     String?
+  officerName  String
+  createdAt    DateTime  @default(now())
+  member       Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model MembershipReactivation {
+  id              String   @id @default(cuid())
+  publicId        String   @unique
+  memberId        String
+  previousStatus  String
+  reason          String
+  outstandingFees Decimal  @db.Decimal(18, 2)
+  requirements    String?
+  documentsVerified Boolean
+  reactivationDate DateTime
+  officerName     String
+  createdAt       DateTime @default(now())
+  member          Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model MembershipTermination {
+  id               String   @id @default(cuid())
+  publicId         String   @unique
+  memberId         String
+  reason           String
+  effectiveDate    DateTime
+  outstanding      Decimal  @db.Decimal(18, 2)
+  refundDue        Decimal  @db.Decimal(18, 2)
+  evidence         String?
+  confirmed        Boolean
+  officerName      String
+  createdAt        DateTime @default(now())
+  member           Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model MembershipNotice {
+  id        String   @id @default(cuid())
+  publicId  String   @unique
+  memberId  String?
+  event     String
+  channel   String
+  subject   String
+  body      String
+  status    String   @default("QUEUED")
+  scheduledAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model MembershipAudit {
+  id             String   @id @default(cuid())
+  publicId       String   @unique
+  memberId       String?
+  entityType     String
+  entityId       String
+  action         String
+  previousStatus String?
+  newStatus      String?
+  userId         String?
+  reason         String?
+  reference      String?
+  requestId      String?
+  ip             String?
+  createdAt      DateTime @default(now())
+
+  @@index([memberId])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Lending — products and the lifecycle around the existing loan register
+// ---------------------------------------------------------------------------
+
+model LoanProduct {
+  id                 String   @id @default(cuid())
+  publicId           String   @unique
+  code               String   @unique
+  name               String
+  description        String?
+  customerType       String
+  purpose            String
+  currency           String   @default("RWF")
+  status             String   @default("ACTIVE")
+  interestRate       Decimal  @db.Decimal(8, 3)
+  interestMethod     String   @default("DECLINING")
+  processingFeeRate  Decimal  @default(0) @db.Decimal(8, 3)
+  insuranceFeeRate   Decimal  @default(0) @db.Decimal(8, 3)
+  guaranteeFeeRate   Decimal  @default(0) @db.Decimal(8, 3)
+  lateFeeRate        Decimal  @default(0) @db.Decimal(8, 3)
+  otherCharges       Decimal  @default(0) @db.Decimal(18, 2)
+  minimumAmount      Decimal  @db.Decimal(18, 2)
+  maximumAmount      Decimal  @db.Decimal(18, 2)
+  minimumTenor       Int
+  maximumTenor       Int
+  graceMonths        Int      @default(0)
+  repaymentFrequency String   @default("MONTHLY")
+  eligibility        String?
+  maximumExposure    Decimal? @db.Decimal(18, 2)
+  debtServiceRule    String?
+  guaranteeRequired  Boolean  @default(false)
+  collateralRequired Boolean  @default(false)
+  allocationOrder    String   @default("FEES,INTEREST,PENALTY,PRINCIPAL")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model LendingCase {
+  id                    String          @id @default(cuid())
+  publicId              String          @unique
+  applicationId         String          @unique
+  customerType          String
+  applicantName         String
+  representative        String?
+  memberPublicId        String?
+  monthlyRevenue        Decimal         @default(0) @db.Decimal(18, 2)
+  monthlyExpenses       Decimal         @default(0) @db.Decimal(18, 2)
+  existingDebt          Decimal         @default(0) @db.Decimal(18, 2)
+  existingRepayments    Decimal         @default(0) @db.Decimal(18, 2)
+  applicantContribution Decimal         @default(0) @db.Decimal(18, 2)
+  expectedCashFlow      String?
+  graceMonths           Int             @default(0)
+  repaymentFrequency    String          @default("MONTHLY")
+  collateralAvailable   Boolean         @default(false)
+  collateralType        String?
+  collateralValue       Decimal?        @db.Decimal(18, 2)
+  collateralOwner       String?
+  details               Json?
+  application           LoanApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model LendingDocument {
+  id             String          @id @default(cuid())
+  publicId       String          @unique
+  applicationId  String
+  documentType   String
+  documentNumber String?
+  issueDate      DateTime?
+  expiryDate     DateTime?
+  fileName       String
+  status         String          @default("PENDING")
+  comment        String?
+  verifiedBy     String?
+  verifiedAt     DateTime?
+  createdAt      DateTime        @default(now())
+  application    LoanApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model LendingKyc {
+  id                 String          @id @default(cuid())
+  publicId           String          @unique
+  applicationId      String
+  kind               String
+  fullName           String?
+  idType             String?
+  idNumber           String?
+  dateOfBirth        DateTime?
+  address            String?
+  phone              String?
+  email              String?
+  organizationName   String?
+  registrationNumber String?
+  taxId              String?
+  directors          String?
+  owners             String?
+  representative     String?
+  beneficialOwners   String?
+  result             String
+  officerName        String
+  reviewedAt         DateTime        @default(now())
+  application        LoanApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model LendingConsent {
+  id            String          @id @default(cuid())
+  publicId      String          @unique
+  applicationId String
+  purpose       String
+  scope         String
+  institution   String
+  effectiveDate DateTime
+  expiryDate    DateTime
+  version       String
+  status        String          @default("ACTIVE")
+  createdAt     DateTime        @default(now())
+  application   LoanApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model LendingAssessment {
+  id                 String          @id @default(cuid())
+  publicId           String          @unique
+  applicationId      String
+  revenue            Decimal         @db.Decimal(18, 2)
+  collections        Decimal         @db.Decimal(18, 2)
+  collectionRate     Decimal         @db.Decimal(8, 3)
+  expenses           Decimal         @db.Decimal(18, 2)
+  exposure           Decimal         @db.Decimal(18, 2)
+  debtService        Decimal         @db.Decimal(18, 2)
+  freeCashFlow       Decimal         @db.Decimal(18, 2)
+  repaymentCapacity  String
+  cashFlowStability  String
+  paymentHistory     String
+  trend              String
+  risks              String?
+  mitigation         String?
+  result             String
+  officerName        String
+  createdAt          DateTime        @default(now())
+  application        LoanApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model LoanOffer {
+  id            String          @id @default(cuid())
+  publicId      String          @unique
+  applicationId String
+  amount        Decimal         @db.Decimal(18, 2)
+  interestRate  Decimal         @db.Decimal(8, 3)
+  tenorMonths   Int
+  graceMonths   Int             @default(0)
+  frequency     String
+  fees          Decimal         @default(0) @db.Decimal(18, 2)
+  conditions    String?
+  expiresOn     DateTime
+  response      String          @default("PENDING")
+  acceptedBy    String?
+  acceptedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  application   LoanApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model LoanContract {
+  id                 String          @id @default(cuid())
+  publicId           String          @unique
+  contractNumber     String          @unique
+  applicationId      String
+  loanId             String?
+  principal          Decimal         @db.Decimal(18, 2)
+  interest           Decimal         @db.Decimal(18, 2)
+  fees               Decimal         @db.Decimal(18, 2)
+  tenorMonths        Int
+  security           String?
+  guarantee          String?
+  defaultTerms       String?
+  otherTerms         String?
+  borrowerSigned     Boolean         @default(false)
+  institutionSigned  Boolean         @default(false)
+  representative     String?
+  signedAt           DateTime?
+  createdAt          DateTime        @default(now())
+  application        LoanApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model LendingCollateral {
+  id                 String          @id @default(cuid())
+  publicId           String          @unique
+  applicationId      String
+  collateralType     String
+  description        String
+  owner              String
+  documentName       String?
+  estimatedValue     Decimal         @db.Decimal(18, 2)
+  valuationDate      DateTime?
+  valuer             String?
+  location           String?
+  registrationNumber String?
+  status             String          @default("PROPOSED")
+  application        LoanApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model LendingGuaranteeRequest {
+  id                  String          @id @default(cuid())
+  publicId            String          @unique
+  applicationId       String
+  requestedLoan       Decimal         @db.Decimal(18, 2)
+  requestedGuarantee  Decimal         @db.Decimal(18, 2)
+  percentage          Decimal         @db.Decimal(8, 3)
+  facility            String?
+  purpose             String
+  fee                 Decimal         @default(0) @db.Decimal(18, 2)
+  decision            String          @default("PENDING")
+  application         LoanApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model LendingPosition {
+  id                 String    @id @default(cuid())
+  loanId             String    @unique
+  penaltyOutstanding Decimal   @default(0) @db.Decimal(18, 2)
+  nextDueDate        DateTime?
+  daysPastDue        Int       @default(0)
+  label              String?
+  loan               Loan      @relation(fields: [loanId], references: [id], onDelete: Cascade)
+}
+
+model LendingInstallment {
+  id             String   @id @default(cuid())
+  publicId       String   @unique
+  loanId         String
+  number         Int
+  dueDate        DateTime
+  principalDue   Decimal  @db.Decimal(18, 2)
+  interestDue    Decimal  @db.Decimal(18, 2)
+  feesDue        Decimal  @db.Decimal(18, 2)
+  totalDue       Decimal  @db.Decimal(18, 2)
+  principalPaid  Decimal  @default(0) @db.Decimal(18, 2)
+  interestPaid   Decimal  @default(0) @db.Decimal(18, 2)
+  feesPaid       Decimal  @default(0) @db.Decimal(18, 2)
+  status         String   @default("DUE")
+  loan           Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+
+  @@unique([loanId, number])
+}
+
+model LendingCollection {
+  id            String    @id @default(cuid())
+  publicId      String    @unique
+  loanId        String
+  contactDate   DateTime
+  method        String
+  person        String
+  outstanding   Decimal   @db.Decimal(18, 2)
+  promiseAmount Decimal?  @db.Decimal(18, 2)
+  promiseDate   DateTime?
+  followUpDate  DateTime?
+  notes         String?
+  status        String    @default("OPEN")
+  loan          Loan      @relation(fields: [loanId], references: [id], onDelete: Cascade)
+}
+
+model LendingPromise {
+  id          String    @id @default(cuid())
+  publicId    String    @unique
+  loanId      String
+  outstanding Decimal   @db.Decimal(18, 2)
+  promised    Decimal   @db.Decimal(18, 2)
+  promiseDate DateTime
+  paymentDate DateTime?
+  officer     String
+  notes       String?
+  status      String    @default("PENDING")
+  loan        Loan      @relation(fields: [loanId], references: [id], onDelete: Cascade)
+}
+
+model LendingRecovery {
+  id             String    @id @default(cuid())
+  publicId       String    @unique
+  loanId         String
+  outstanding    Decimal   @db.Decimal(18, 2)
+  daysPastDue    Int
+  stage          String
+  officer        String
+  strategy       String
+  nextAction     String
+  nextActionDate DateTime?
+  loan           Loan      @relation(fields: [loanId], references: [id], onDelete: Cascade)
+}
+
+model LendingWriteOff {
+  id          String   @id @default(cuid())
+  publicId    String   @unique
+  loanId      String
+  principal   Decimal  @db.Decimal(18, 2)
+  interest    Decimal  @db.Decimal(18, 2)
+  fees        Decimal  @db.Decimal(18, 2)
+  total       Decimal  @db.Decimal(18, 2)
+  history     String?
+  reason      String
+  evidence    String?
+  requestedBy String
+  approvedBy  String?
+  status      String   @default("REQUESTED")
+  loan        Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+}
+
+model LendingRestructure {
+  id            String    @id @default(cuid())
+  publicId      String    @unique
+  loanId        String
+  principal     Decimal   @db.Decimal(18, 2)
+  interest      Decimal   @db.Decimal(18, 2)
+  overdue       Decimal   @db.Decimal(18, 2)
+  currentTenor  Int
+  newTenor      Int
+  frequency     String
+  graceMonths   Int       @default(0)
+  installment   Decimal   @db.Decimal(18, 2)
+  interestTerms String?
+  fees          Decimal   @default(0) @db.Decimal(18, 2)
+  maturity      DateTime?
+  reason        String
+  requestedBy   String
+  approvedBy    String?
+  status        String    @default("REQUESTED")
+  loan          Loan      @relation(fields: [loanId], references: [id], onDelete: Cascade)
+}
+
+model LendingHoliday {
+  id        String   @id @default(cuid())
+  publicId  String   @unique
+  loanId    String
+  months    Int
+  reason    String
+  decision  String
+  startDate DateTime
+  loan      Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+}
+
+model LendingTopUp {
+  id          String  @id @default(cuid())
+  publicId    String  @unique
+  loanId      String
+  outstanding Decimal @db.Decimal(18, 2)
+  requested   Decimal @db.Decimal(18, 2)
+  exposure    Decimal @db.Decimal(18, 2)
+  purpose     String
+  tenorMonths Int
+  repayment   String?
+  eligibility String
+  capacity    String
+  decision    String
+  loan        Loan    @relation(fields: [loanId], references: [id], onDelete: Cascade)
+}
+
+model LendingRefinance {
+  id             String  @id @default(cuid())
+  publicId       String  @unique
+  loanId         String
+  lender         String
+  outstanding    Decimal @db.Decimal(18, 2)
+  currentRate    Decimal @db.Decimal(8, 3)
+  remainingTenor Int
+  newAmount      Decimal @db.Decimal(18, 2)
+  newRate        Decimal @db.Decimal(8, 3)
+  newTenor       Int
+  settlement     Decimal @db.Decimal(18, 2)
+  additional     Decimal @db.Decimal(18, 2)
+  loan           Loan    @relation(fields: [loanId], references: [id], onDelete: Cascade)
+}
+
+model LendingTransfer {
+  id              String   @id @default(cuid())
+  publicId        String   @unique
+  loanId          String
+  fromInstitution String
+  toInstitution   String
+  principal       Decimal  @db.Decimal(18, 2)
+  interest        Decimal  @db.Decimal(18, 2)
+  transferDate    DateTime
+  reason          String
+  approved        Boolean  @default(false)
+  loan            Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+}
+
+model LendingAdjustment {
+  id          String   @id @default(cuid())
+  publicId    String   @unique
+  loanId      String
+  kind        String
+  original    Decimal  @db.Decimal(18, 2)
+  amount      Decimal  @db.Decimal(18, 2)
+  reason      String
+  requestedBy String
+  approvedBy  String
+  createdAt   DateTime @default(now())
+  loan        Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+}
+
+model LendingRefund {
+  id                    String   @id @default(cuid())
+  publicId              String   @unique
+  loanId                String
+  originalTransaction   String
+  amount                Decimal  @db.Decimal(18, 2)
+  reason                String
+  destination           String
+  reference             String?
+  externalTransactionId String?  @unique
+  railCode              String?
+  status                String   @default("REQUESTED")
+  loan                  Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+}
+
+model LendingSettlement {
+  id                String   @id @default(cuid())
+  publicId          String   @unique
+  loanId            String   @unique
+  principalPaid     Decimal  @db.Decimal(18, 2)
+  interestPaid      Decimal  @db.Decimal(18, 2)
+  feesPaid          Decimal  @db.Decimal(18, 2)
+  penaltiesPaid     Decimal  @db.Decimal(18, 2)
+  finalPayment      Decimal  @db.Decimal(18, 2)
+  principalSettled  Boolean
+  interestSettled   Boolean
+  feesSettled       Boolean
+  clear             Boolean
+  settlementDate    DateTime
+  loan              Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+}
+
+model LendingNotice {
+  id        String   @id @default(cuid())
+  publicId  String   @unique
+  reference String?
+  event     String
+  channel   String
+  subject   String
+  body      String
+  status    String   @default("QUEUED")
+  createdAt DateTime @default(now())
+}
+
+model LendingAudit {
+  id             String   @id @default(cuid())
+  publicId       String   @unique
+  reference      String?
+  entityType     String
+  entityId       String
+  action         String
+  previousStatus String?
+  newStatus      String?
+  amount         Decimal? @db.Decimal(18, 2)
+  userId         String?
+  reason         String?
+  institution    String?
+  requestId      String?
+  createdAt      DateTime @default(now())
+
+  @@index([reference])
+  @@index([createdAt])
 }

@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { ApplySteps } from '../components/ApplySteps'
 import { PageHero } from '../components/PageHero'
 import { usePageTitle } from '../components/usePageTitle'
 import { api } from '../platform/api'
@@ -21,25 +23,70 @@ const interests = [
   'Brand and communications',
 ]
 
+const STEPS = ['Who is applying', 'The request', 'Confirm']
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export function Contact() {
   usePageTitle('Request a briefing — UPSA Next Payment')
+  const [params] = useSearchParams()
+  const preset = params.get('interest') ?? ''
+  const [step, setStep] = useState(0)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [draft, setDraft] = useState({
+    name: '',
+    organisation: '',
+    role: '',
+    interest: interests.includes(preset) ? preset : '',
+    email: '',
+    message: '',
+    consent: false,
+  })
+
+  function problem() {
+    if (step === 0 && (!draft.name.trim() || !draft.organisation.trim() || !draft.role)) {
+      return 'Enter your name, organisation, and role.'
+    }
+    if (step === 1) {
+      if (!draft.interest || !draft.email.trim() || !draft.message.trim()) return 'Choose a topic, then add your email and message.'
+      if (!EMAIL.test(draft.email.trim())) return 'Enter a work email.'
+    }
+    if (step === 2 && !draft.consent) return 'Confirm that this request is made on behalf of a school, UPSA, or a regulated institution.'
+    return ''
+  }
+
+  function continueStep() {
+    const issue = problem()
+    if (issue) {
+      setError(issue)
+      return
+    }
+    setError('')
+    setStep((current) => Math.min(current + 1, STEPS.length - 1))
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const form = new FormData(event.currentTarget)
+    if (step < STEPS.length - 1) {
+      continueStep()
+      return
+    }
+    const issue = problem()
+    if (issue) {
+      setError(issue)
+      return
+    }
     setBusy(true)
     setError('')
     try {
       await api.messages.submit({
-        name: String(form.get('name')).trim(),
-        organisation: String(form.get('organisation')).trim(),
-        role: String(form.get('role')),
-        interest: String(form.get('interest')),
-        email: String(form.get('email')).trim(),
-        message: String(form.get('message')).trim(),
+        name: draft.name.trim(),
+        organisation: draft.organisation.trim(),
+        role: draft.role,
+        interest: draft.interest,
+        email: draft.email.trim(),
+        message: draft.message.trim(),
       })
       setSent(true)
     } catch (err) {
@@ -63,7 +110,7 @@ export function Contact() {
       <section className="page-block alt">
         <div className="contact-shell">
           <div className="page-prose">
-            <p>Briefings are coordinated through the Rwanda Union of Private Schools Association in Kigali.</p>
+            <p>Briefings are coordinated through the Universor of Private Schools Association in Kigali.</p>
             <ul className="page-list">
               <li>Organisation: UPSA</li>
               <li>Platform: UPSA Next Payment</li>
@@ -79,46 +126,68 @@ export function Contact() {
             </div>
           ) : (
             <form className="contact-form" onSubmit={(event) => void onSubmit(event)}>
+              <ApplySteps steps={STEPS} step={step} />
               {error && <p className="form-error" role="alert">{error}</p>}
-              <div className="field-row">
-                <div className="field">
-                  <label htmlFor="name">Full name</label>
-                  <input id="name" name="name" required autoComplete="name" />
-                </div>
-                <div className="field">
-                  <label htmlFor="organisation">Organisation</label>
-                  <input id="organisation" name="organisation" required />
-                </div>
+              {step === 0 && (
+                <>
+                  <div className="field">
+                    <label htmlFor="name">Full name</label>
+                    <input id="name" value={draft.name} autoComplete="name" onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="organisation">Organisation</label>
+                    <input id="organisation" value={draft.organisation} onChange={(event) => setDraft((current) => ({ ...current, organisation: event.target.value }))} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="role">Role</label>
+                    <select id="role" value={draft.role} onChange={(event) => setDraft((current) => ({ ...current, role: event.target.value }))}>
+                      <option value="">Select your role</option>
+                      {roles.map((role) => <option key={role}>{role}</option>)}
+                    </select>
+                  </div>
+                </>
+              )}
+              {step === 1 && (
+                <>
+                  <div className="field">
+                    <label htmlFor="interest">Interest</label>
+                    <select id="interest" value={draft.interest} onChange={(event) => setDraft((current) => ({ ...current, interest: event.target.value }))}>
+                      <option value="">Select a topic</option>
+                      {interests.map((item) => <option key={item}>{item}</option>)}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="email">Work email</label>
+                    <input id="email" type="email" value={draft.email} autoComplete="email" onChange={(event) => setDraft((current) => ({ ...current, email: event.target.value }))} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="message">Message</label>
+                    <textarea id="message" value={draft.message} placeholder="Tell us how you would like to engage with UPSA Next Payment." onChange={(event) => setDraft((current) => ({ ...current, message: event.target.value }))} />
+                  </div>
+                </>
+              )}
+              {step === 2 && (
+                <>
+                  <dl className="apply-summary">
+                    <div><dt>Name</dt><dd>{draft.name}</dd></div>
+                    <div><dt>Organisation</dt><dd>{draft.organisation}</dd></div>
+                    <div><dt>Role</dt><dd>{draft.role}</dd></div>
+                    <div><dt>Interest</dt><dd>{draft.interest}</dd></div>
+                    <div><dt>Email</dt><dd>{draft.email}</dd></div>
+                    <div><dt>Message</dt><dd>{draft.message}</dd></div>
+                  </dl>
+                  <label className="consent">
+                    <input type="checkbox" checked={draft.consent} onChange={(event) => setDraft((current) => ({ ...current, consent: event.target.checked }))} />
+                    I confirm this request is made on behalf of a school, UPSA or a regulated financial institution, and I consent to being contacted about this briefing.
+                  </label>
+                </>
+              )}
+              <div className="apply-actions">
+                {step > 0 && <button className="button secondary" type="button" onClick={() => { setError(''); setStep((current) => current - 1) }}>Back</button>}
+                {step < STEPS.length - 1
+                  ? <button className="button primary" type="submit">Continue</button>
+                  : <button className="button primary" type="submit" disabled={busy}>{busy ? 'Submitting…' : 'Submit briefing request'}</button>}
               </div>
-              <div className="field-row">
-                <div className="field">
-                  <label htmlFor="role">Role</label>
-                  <select id="role" name="role" required defaultValue="">
-                    <option value="" disabled>Select your role</option>
-                    {roles.map((role) => <option key={role}>{role}</option>)}
-                  </select>
-                </div>
-                <div className="field">
-                  <label htmlFor="interest">Interest</label>
-                  <select id="interest" name="interest" required defaultValue="">
-                    <option value="" disabled>Select a topic</option>
-                    {interests.map((item) => <option key={item}>{item}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="field">
-                <label htmlFor="email">Work email</label>
-                <input id="email" name="email" type="email" required autoComplete="email" />
-              </div>
-              <div className="field">
-                <label htmlFor="message">Message</label>
-                <textarea id="message" name="message" required placeholder="Tell us how you would like to engage with UPSA Next Payment." />
-              </div>
-              <label className="consent">
-                <input type="checkbox" name="consent" required />
-                I confirm this request is made on behalf of a school, UPSA or a regulated financial institution, and I consent to being contacted about this briefing.
-              </label>
-              <button className="button primary" type="submit" disabled={busy}>{busy ? 'Submitting…' : 'Submit briefing request'}</button>
             </form>
           )}
         </div>
