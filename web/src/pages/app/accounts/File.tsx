@@ -74,7 +74,7 @@ export function AccountFilePage() {
               ]}
             />
             {account.documents.length > 0 && (
-              <Table columns={['Document', 'File']} rows={account.documents.map((item) => [label(item.documentType), item.fileName])} />
+              <Table columns={['Document', 'File']} empty="No documents on the file." rows={account.documents.map((item) => [label(item.documentType), item.fileName])} />
             )}
           </Panel>
           {writable && <Review account={account} busy={busy} refresh={refresh} />}
@@ -200,7 +200,7 @@ function Review({ account, busy, refresh }: { account: AccountFile; busy: boolea
         <Panel icon="search" title="Duplicate check">
           <p>The check looks at open accounts, schools, guardians, students, and registrations. A confirmed match must be linked or rejected.</p>
           {account.duplicateMatches.length > 0 && (
-            <Table columns={['Source', 'Record', 'Name', 'Result']} rows={account.duplicateMatches.map((item) => [item.source, item.id, item.name, label(item.reason)])} />
+            <Table columns={['Source', 'Record', 'Name', 'Result']} empty="No duplicate matches." rows={account.duplicateMatches.map((item) => [item.source, item.id, item.name, label(item.reason)])} />
           )}
           <div className="app-inline-actions">
             <button className="button primary" type="button" disabled={busy} onClick={() => refresh(() => api.accounts.duplicates(account.id))}>Run duplicate check</button>
@@ -279,7 +279,7 @@ function Review({ account, busy, refresh }: { account: AccountFile; busy: boolea
       {['ACTIVE', 'SUSPENDED', 'DORMANT'].includes(account.status) && (
         <Panel icon="shield" title="Security and status">
           <p>Role {account.roleName}. Limits {money(account.limits.daily)} daily, {money(account.limits.transaction)} per transaction. {account.legalHold ? `Legal hold: ${account.legalHoldReason}` : 'No legal hold.'}</p>
-          {account.devices.length > 0 && <Table columns={['Device', 'Registered']} rows={account.devices.map((item) => [item.name, item.registeredAt.slice(0, 10)])} />}
+          {account.devices.length > 0 && <Table columns={['Device', 'Registered']} empty="No devices registered." rows={account.devices.map((item) => [item.name, item.registeredAt.slice(0, 10)])} />}
           {account.status === 'ACTIVE' && (
             <form className="app-form" onSubmit={onSubmit((event) => refresh(() => api.accounts.device(account.id, String(new FormData(event.currentTarget).get('name') ?? ''))))}>
               <Field label="Device name" note="required"><input name="name" required minLength={2} /></Field>
@@ -343,7 +343,7 @@ function Review({ account, busy, refresh }: { account: AccountFile; busy: boolea
             <Field label="Reason" span="full" note="required"><input name="reason" required minLength={5} /></Field>
             <button className="button secondary" type="submit" disabled={busy}>Apply change</button>
           </form>
-          {account.changes.length > 0 && <Table columns={['Field', 'From', 'To', 'Reason']} rows={account.changes.map((item) => [item.field, item.previous || '—', item.value, item.reason])} />}
+          {account.changes.length > 0 && <Table columns={['Field', 'From', 'To', 'Reason']} empty="No changes recorded." rows={account.changes.map((item) => [item.field, item.previous || '—', item.value, item.reason])} />}
         </Panel>
       )}
       {!['REJECTED', 'CLOSED', 'ACTIVE', 'APPROVED'].includes(account.status) && account.status !== 'PENDING_APPROVAL' && (
