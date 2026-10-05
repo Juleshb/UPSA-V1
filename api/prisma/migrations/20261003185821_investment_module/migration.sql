@@ -368,9 +368,6 @@ CREATE INDEX "InvestmentMessage_sentAt_idx" ON "InvestmentMessage"("sentAt");
 ALTER TABLE "InvestmentApplication" ADD CONSTRAINT "InvestmentApplication_schoolId_fkey" FOREIGN KEY ("schoolId") REFERENCES "School"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "InvestmentApplication" ADD CONSTRAINT "InvestmentApplication_registrationId_fkey" FOREIGN KEY ("registrationId") REFERENCES "Registration"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "InvestmentApplication" ADD CONSTRAINT "InvestmentApplication_opportunityId_fkey" FOREIGN KEY ("opportunityId") REFERENCES "InvestmentOpportunity"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -378,9 +375,6 @@ ALTER TABLE "InvestmentPosition" ADD CONSTRAINT "InvestmentPosition_applicationI
 
 -- AddForeignKey
 ALTER TABLE "InvestmentPosition" ADD CONSTRAINT "InvestmentPosition_schoolId_fkey" FOREIGN KEY ("schoolId") REFERENCES "School"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "InvestmentPosition" ADD CONSTRAINT "InvestmentPosition_registrationId_fkey" FOREIGN KEY ("registrationId") REFERENCES "Registration"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "InvestmentPosition" ADD CONSTRAINT "InvestmentPosition_opportunityId_fkey" FOREIGN KEY ("opportunityId") REFERENCES "InvestmentOpportunity"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

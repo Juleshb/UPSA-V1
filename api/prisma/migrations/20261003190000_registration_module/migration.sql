@@ -109,3 +109,9 @@ ALTER TABLE "RegistrationDocument" ADD CONSTRAINT "RegistrationDocument_registra
 
 -- AddForeignKey
 ALTER TABLE "RegistrationEvent" ADD CONSTRAINT "RegistrationEvent_registrationId_fkey" FOREIGN KEY ("registrationId") REFERENCES "Registration"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "InvestmentApplication" ADD CONSTRAINT "InvestmentApplication_registrationId_fkey" FOREIGN KEY ("registrationId") REFERENCES "Registration"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "InvestmentPosition" ADD CONSTRAINT "InvestmentPosition_registrationId_fkey" FOREIGN KEY ("registrationId") REFERENCES "Registration"("id") ON DELETE SET NULL ON UPDATE CASCADE;
