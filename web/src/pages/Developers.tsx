@@ -145,7 +145,7 @@ export function Developers() {
   const selected = endpointById(params.get('try') || 'auth-login')
 
   const [query, setQuery] = useState('')
-  const [baseUrl, setBaseUrl] = useState(() => sessionStorage.getItem(BASE_KEY) ?? 'http://localhost:4000')
+  const [baseUrl, setBaseUrl] = useState(() => sessionStorage.getItem(BASE_KEY) ?? (import.meta.env.PROD ? 'https://stackpay.online' : 'http://localhost:4000'))
   const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY) ?? '')
   const [user, setUser] = useState<SessionUser | null>(() => readStore<SessionUser | null>(USER_KEY, null))
   const [email, setEmail] = useState<string>(SEEDED_ACCOUNTS[0].email)

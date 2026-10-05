@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://stackpay.online/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://stackpay.online/health"
+    },
+    {
       "source": "/((?!api/|health).*)",
       "destination": "/index.html"
     }

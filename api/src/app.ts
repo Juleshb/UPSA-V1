@@ -19,8 +19,13 @@ export function createApp() {
         callback(null, true);
         return;
       }
+      const allowedOrigins = new Set([
+        ...env.corsOrigin.split(',').map((item) => item.trim()).filter(Boolean),
+        'https://upsanextpayment.com',
+        'https://www.upsanextpayment.com',
+      ]);
       const allowed =
-        origin === env.corsOrigin ||
+        allowedOrigins.has(origin) ||
         (env.nodeEnv !== 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin));
       callback(allowed ? null : new Error('Origin not allowed'), allowed);
     },

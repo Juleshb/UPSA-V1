@@ -19,7 +19,7 @@ export const env = {
   jwtAccessTtl: process.env.JWT_ACCESS_TTL ?? '15m',
   jwtRefreshTtl: process.env.JWT_REFRESH_TTL ?? '7d',
   webhookSecret: process.env.WEBHOOK_SECRET ?? 'dev-webhook-secret',
-  corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+  corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173,https://upsanextpayment.com,https://www.upsanextpayment.com',
   smtpHost: process.env.SMTP_HOST ?? 'smtp.gmail.com',
   smtpPort: Number(process.env.SMTP_PORT ?? 587),
   smtpUser: process.env.SMTP_USER ?? '',
