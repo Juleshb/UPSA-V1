@@ -8,11 +8,14 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="footer-top">
         <div className="footer-brand">
-          <img src="/rupsa-next-logo-reversed.svg" alt="UPSA Next Payment" />
+          <div className="footer-marks">
+            <img src="/rupsa-next-logo-reversed.svg" alt="UPSA Next Payment" />
+            <img src="/rupsa-plc-logo-reversed.svg" alt="RUPSA Next Payment PLC" />
+          </div>
           <p>
-            Official digital platform concept of the Universor of Private
-            Schools Association — connecting schools, families and licensed
-            financial institutions.
+            UPSA Next Payment is the product. RUPSA Next Payment PLC is the
+            company behind the Collateral Guarantee Support Facility —
+            connecting schools, families and licensed financial institutions.
           </p>
         </div>
         {navMenus.map((menu) => (
@@ -27,12 +30,13 @@ export function SiteFooter() {
           <b>Contact</b>
           <Link to="/services">Online services</Link>
           <Link to="/developers">API sandbox</Link>
+          <Link to="/brand">Brand identity</Link>
           <span>Kigali, Rwanda</span>
           <span>Currency: RWF</span>
         </div>
       </div>
       <div className="footer-base">
-        <small>© {year} UPSA Next Payment. Concept and proposed architecture.</small>
+        <small>© {year} RUPSA Next Payment PLC. UPSA Next Payment product concept.</small>
         <small>Regulated payment and lending activity remains with licensed institutions.</small>
         <a href="https://jules-hb-250.netlify.app/" target="_blank" rel="noreferrer">
           Designed by HABARUREMA Jules

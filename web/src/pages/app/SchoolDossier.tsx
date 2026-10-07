@@ -94,6 +94,7 @@ export function SchoolDossier() {
     void run(() => api.schools.update(schoolId, {
       schoolName: String(form.get('schoolName')),
       taxIdentificationNumber: String(form.get('taxIdentificationNumber') || ''),
+      sdmsCode: String(form.get('sdmsCode') || ''),
       rupsaMemberId: String(form.get('rupsaMemberId') || ''),
       phone: String(form.get('phone')),
       email: String(form.get('email')),
@@ -329,6 +330,9 @@ function DossierBody({
           </Field>
           <Field label="Registration number">
             <input value={school.registrationNumber ?? ''} disabled />
+          </Field>
+          <Field label="SDMS code">
+            <input name="sdmsCode" defaultValue={school.sdmsCode ?? ''} disabled={!editable} />
           </Field>
           <Field label="School type">
             <input value={pretty(school.schoolType)} disabled />

@@ -92,7 +92,6 @@ export function DonorForm() {
       <form id="donor-form" key={steps.step} onSubmit={(event) => { event.preventDefault(); submit('register', steps.collect(event.currentTarget)) }}>
         {steps.step === 0 && (
           <FieldGroup title="Donor information">
-            <Field label="Donor ID" note="automatic"><input value="Assigned on save" disabled /></Field>
             <Field label="Donor type" note="required">
               <select value={donorType} onChange={(event) => setDonorType(event.target.value)}>
                 {DONOR_TYPES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}

@@ -592,9 +592,9 @@ h1, h2, .page-hero h1, .hero h1 {
   letter-spacing: .12em;
 }
 .device-top img { width: 22px; height: 22px; border-radius: 6px; }
-.device-top .brand-line b { font-size: 11px; letter-spacing: .06em; }
-.device-top .brand-line em { font-size: 9px; }
-.device-top .brand-lockup small { display: block; margin-top: 2px; color: #0e9e86; font-size: 6.5px; font-weight: 750; letter-spacing: .16em; text-transform: uppercase; }
+.device-top .product-lockup > b { font-size: 11px; letter-spacing: .1em; }
+.device-top .brand-rule { width: 18px; margin: 2px 0 2px; }
+.device-top .brand-lockup small { display: block; color: #0e9e86; font-size: 6.5px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
 .device-receipt {
   margin: 22px 0;
   padding: 20px;

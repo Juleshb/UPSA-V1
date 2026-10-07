@@ -106,7 +106,7 @@ export function MembershipCertificate(details: CertificateDetails) {
         <div className="certificate-sheet" ref={sheetRef}>
           <div className="certificate-outer">
             <div className="certificate-frame">
-              <img className="certificate-logo" src="/rupsa-next-logo.png" alt="UPSA Next Payment" />
+              <img className="certificate-logo" src="/rupsa-next-logo.svg" alt="UPSA Next Payment" />
               <p className="certificate-org">Universor of Private Schools Association</p>
               <p className="certificate-verified">Verified membership</p>
               <h2>Certificate of Membership</h2>

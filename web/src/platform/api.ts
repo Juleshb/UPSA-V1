@@ -240,6 +240,7 @@ export const api = {
     submit: (body: {
       schoolName: string
       registrationNumber: string
+      sdmsCode: string
       schoolType: string
       ownershipType: string
       dateEstablished: string
@@ -408,6 +409,7 @@ export const api = {
       sector: string
       rupsaMemberId: string
       taxIdentificationNumber: string
+      sdmsCode: string
     }>) => patch<SchoolRow>(`/schools/${id}`, body),
     transition: (id: string, status: string) => post<SchoolRow>(`/schools/${id}/transition`, { status }),
     membership: (id: string, body: { decision: 'PENDING' | 'VERIFIED' | 'REJECTED'; rupsaMemberId?: string }) =>
@@ -934,6 +936,7 @@ export type SchoolRow = {
   schoolName: string
   rupsaMemberId: string | null
   registrationNumber?: string
+  sdmsCode?: string | null
   schoolType?: string | null
   ownershipType?: string | null
   dateEstablished?: string | null

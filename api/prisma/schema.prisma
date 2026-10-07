@@ -140,6 +140,7 @@ model School {
   rupsaMemberId           String?      @unique
   schoolName              String
   registrationNumber      String       @unique
+  sdmsCode                String?      @unique
   schoolType              SchoolType?
   ownershipType           OwnershipType?
   dateEstablished         DateTime?

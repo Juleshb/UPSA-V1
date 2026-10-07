@@ -89,7 +89,6 @@ export function CampaignForm() {
       <form id="campaign-form" key={steps.step} onSubmit={(event) => { event.preventDefault(); submit('save', steps.collect(event.currentTarget)) }}>
         {steps.step === 0 && (
           <FieldGroup title="Campaign information">
-            <Field label="Campaign ID" note="automatic"><input value="Assigned on save" disabled /></Field>
             <Field label="Campaign code" note="required"><input name="code" required defaultValue={saved.code ?? ''} placeholder="EDU-2026" /></Field>
             <Field label="Campaign name" note="required"><input name="name" required defaultValue={saved.name ?? ''} /></Field>
             <Field label="Campaign type" note="required">

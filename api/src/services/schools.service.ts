@@ -67,6 +67,7 @@ export async function createSchool(input: {
   rupsaMemberId?: string;
   schoolName: string;
   registrationNumber: string;
+  sdmsCode?: string;
   taxIdentificationNumber?: string;
   phone: string;
   email: string;
@@ -80,6 +81,7 @@ export async function createSchool(input: {
         rupsaMemberId: input.rupsaMemberId,
         schoolName: input.schoolName,
         registrationNumber: input.registrationNumber,
+        sdmsCode: input.sdmsCode?.trim() || null,
         taxIdentificationNumber: input.taxIdentificationNumber,
         phone: input.phone,
         email: input.email,
@@ -92,7 +94,7 @@ export async function createSchool(input: {
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      throw errors.conflict('SCHOOL_EXISTS', 'A school with this registration number or member ID already exists.');
+      throw errors.conflict('SCHOOL_EXISTS', 'A school with this registration number, SDMS code, or member ID already exists.');
     }
     throw error;
   }
@@ -134,22 +136,32 @@ export async function updateSchool(schoolId: string, input: {
   sector?: string;
   rupsaMemberId?: string;
   taxIdentificationNumber?: string;
+  sdmsCode?: string;
 }, actorId?: string) {
   const current = await findSchool(schoolId);
   assertEditable(current.status);
-  const school = await prisma.school.update({
-    where: { id: current.id },
-    data: {
-      schoolName: input.schoolName,
-      phone: input.phone,
-      email: input.email,
-      province: input.province,
-      district: input.district,
-      sector: input.sector,
-      rupsaMemberId: input.rupsaMemberId,
-      taxIdentificationNumber: input.taxIdentificationNumber,
-    },
-  });
+  let school;
+  try {
+    school = await prisma.school.update({
+      where: { id: current.id },
+      data: {
+        schoolName: input.schoolName,
+        phone: input.phone,
+        email: input.email,
+        province: input.province,
+        district: input.district,
+        sector: input.sector,
+        rupsaMemberId: input.rupsaMemberId,
+        taxIdentificationNumber: input.taxIdentificationNumber,
+        sdmsCode: input.sdmsCode === undefined ? undefined : input.sdmsCode.trim() || null,
+      },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      throw errors.conflict('SCHOOL_EXISTS', 'A school with this SDMS code or member ID already exists.');
+    }
+    throw error;
+  }
 
   await writeAudit({
     actorId,
@@ -218,6 +230,7 @@ function serializeSchool(school: Awaited<ReturnType<typeof findSchool>>) {
     rupsaMemberId: school.rupsaMemberId,
     schoolName: school.schoolName,
     registrationNumber: school.registrationNumber,
+    sdmsCode: school.sdmsCode,
     schoolType: school.schoolType,
     ownershipType: school.ownershipType,
     dateEstablished: dateOnly(school.dateEstablished),
@@ -750,6 +763,7 @@ export async function submitPublicApplication(input: {
   rupsaMemberId?: string;
   schoolName: string;
   registrationNumber: string;
+  sdmsCode: string;
   schoolType: SchoolType;
   ownershipType: OwnershipType;
   dateEstablished: string;
@@ -832,6 +846,7 @@ export async function submitPublicApplication(input: {
         membershipApplicationId: membership?.membershipApplicationId,
         schoolName: input.schoolName,
         registrationNumber: input.registrationNumber,
+        sdmsCode: input.sdmsCode.trim(),
         schoolType: input.schoolType,
         ownershipType: input.ownershipType,
         dateEstablished: new Date(input.dateEstablished),
@@ -892,7 +907,7 @@ export async function submitPublicApplication(input: {
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      throw errors.conflict('SCHOOL_EXISTS', 'A school with this registration number or member ID already exists.');
+      throw errors.conflict('SCHOOL_EXISTS', 'A school with this registration number, SDMS code, or member ID already exists.');
     }
     throw error;
   }

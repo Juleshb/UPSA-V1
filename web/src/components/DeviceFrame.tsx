@@ -5,9 +5,10 @@ export function DeviceFrame() {
       <div className="device-screen">
         <div className="device-top">
           <img src="/rupsa-next-icon.svg" alt="" />
-          <span className="brand-lockup">
-            <span className="brand-line"><b>UPSA</b><em>Next</em></span>
-            <small>Payment</small>
+          <span className="brand-lockup product-lockup">
+            <b>UPSA</b>
+            <i className="brand-rule" />
+            <small>Next Payment</small>
           </span>
         </div>
         <div className="device-receipt">

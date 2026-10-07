@@ -117,7 +117,7 @@ export function StudentFile() {
                 : <div className="student-photo empty">No photo on file</div>}
               <dl className="app-dl">
                 <Fact label="Student ID" value={student.studentId} />
-                <Fact label="Admission number" value={student.studentExternalId} />
+                <Fact label="SDMS code" value={student.studentExternalId} />
                 <Fact label="Name" value={[student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') || student.studentName} />
                 <Fact label="Date of birth" value={text(student.dateOfBirth)} />
                 <Fact label="Gender" value={text(student.gender)} />

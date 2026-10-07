@@ -121,7 +121,7 @@ export function StudentRegister() {
   function validate(index: number) {
     if (index === 0) {
       if (!schoolId) return issue('Choose the school.')
-      if (!studentExternalId.trim()) return issue('Enter the admission number.')
+      if (!studentExternalId.trim()) return issue('Enter the student SDMS code.')
       if (firstName.trim().length < 1 || lastName.trim().length < 1) return issue('Enter the first and last name.')
       if (!dateOfBirth) return issue('Enter the date of birth.')
       if (!gender) return issue('Choose the gender.')
@@ -259,11 +259,8 @@ export function StudentRegister() {
       {step === 0 && (
         <>
           <FieldGroup title="Student information">
-            <Field label="Student ID" note="automatic" hint="Assigned when the student is saved">
-              <input value="RUPSA-STD-····" readOnly />
-            </Field>
-            <Field label="Admission number" note="required">
-              <input value={studentExternalId} onChange={(event) => setStudentExternalId(event.target.value)} placeholder="ADM-2026-014" />
+            <Field label="SDMS code" note="required" hint="The student code from the School Data Management System.">
+              <input value={studentExternalId} onChange={(event) => setStudentExternalId(event.target.value)} placeholder="SDMS-STD-014" />
             </Field>
             <Field label="First name" note="required">
               <input value={firstName} onChange={(event) => setFirstName(event.target.value)} />
@@ -371,9 +368,6 @@ export function StudentRegister() {
                 )}
               </header>
               <div className="app-form">
-                <Field label="Parent / guardian ID" note="automatic" hint="Assigned when the student is saved">
-                  <input value="RUPSA-GRD-····" readOnly />
-                </Field>
                 <Field label="Full name" note="required">
                   <input value={guardian.fullName} onChange={(event) => updateGuardian(guardian.key, { fullName: event.target.value })} />
                 </Field>
@@ -452,9 +446,6 @@ export function StudentRegister() {
 
       {step === 4 && (
         <FieldGroup title="Financial profile">
-          <Field label="Student ID" note="automatic"><input value="Assigned on save" readOnly /></Field>
-          <Field label="School ID" note="automatic"><input value={schoolId || 'Choose a school first'} readOnly /></Field>
-          <Field label="Parent / guardian ID" note="automatic" hint="The primary guardian is linked for billing"><input value="Assigned on save" readOnly /></Field>
           <Field label="Fee category" note="required">
             <input value={feeCategory} onChange={(event) => setFeeCategory(event.target.value)} placeholder="Day" />
           </Field>

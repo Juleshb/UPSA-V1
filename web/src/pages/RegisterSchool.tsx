@@ -60,7 +60,7 @@ const LEGAL_DOCUMENTS = [
 ] as const
 
 const STEPS = [
-  { label: 'School', title: 'Basic school information', lead: 'Use the official name and registration number. The school ID is assigned when the application is submitted.' },
+  { label: 'School', title: 'Basic school information', lead: 'Use the official name, registration number, and SDMS code. The school ID is assigned when the application is submitted.' },
   { label: 'Location', title: 'Location and contact', lead: 'Where the school operates in Rwanda, and how UPSA should reach the office.' },
   { label: 'Legal', title: 'Legal information', lead: 'Registration, licence, and tax details, with the supporting files.' },
   { label: 'Representative', title: 'Authorized representative', lead: 'The person authorized to act for the school. A representative ID is assigned on submission.' },
@@ -91,6 +91,7 @@ type Lookup = SchoolApplicationStatus
 type Draft = {
   schoolName: string
   registrationNumber: string
+  sdmsCode: string
   schoolType: string
   ownershipType: string
   dateEstablished: string
@@ -137,6 +138,7 @@ function emptyDraft(): Draft {
   return {
     schoolName: '',
     registrationNumber: '',
+    sdmsCode: '',
     schoolType: '',
     ownershipType: '',
     dateEstablished: '',
@@ -263,6 +265,7 @@ export function RegisterSchool({ embedded = false, onDismiss }: { embedded?: boo
     if (index === 0) {
       if (draft.schoolName.trim().length < 2) return 'Enter the official school name.'
       if (draft.registrationNumber.trim().length < 2) return 'Enter the school registration number.'
+      if (draft.sdmsCode.trim().length < 2) return 'Enter the school SDMS code.'
       if (!draft.schoolType) return 'Choose the school type.'
       if (!draft.ownershipType) return 'Choose the ownership type.'
       if (!notFuture(draft.dateEstablished)) return 'Enter the date the school was established.'
@@ -360,6 +363,7 @@ export function RegisterSchool({ embedded = false, onDismiss }: { embedded?: boo
       const created = await api.schoolApplications.submit({
         schoolName: draft.schoolName.trim(),
         registrationNumber: draft.registrationNumber.trim(),
+        sdmsCode: draft.sdmsCode.trim(),
         schoolType: draft.schoolType,
         ownershipType: draft.ownershipType,
         dateEstablished: draft.dateEstablished,
@@ -566,11 +570,11 @@ export function RegisterSchool({ embedded = false, onDismiss }: { embedded?: boo
                 {step === 0 && (
                   <>
                     <FormSection title="Identity" note="Use the name and number printed on the official papers.">
-                      <Field label="School ID" htmlFor="schoolIdPreview" locked hint="Assigned automatically when you submit.">
-                        <input id="schoolIdPreview" value="Assigned on submission" disabled />
-                      </Field>
                       <Field label="School registration number" htmlFor="registrationNumber" hint="The number on the school’s official registration papers.">
                         <input id="registrationNumber" autoComplete="off" value={draft.registrationNumber} onChange={(event) => set('registrationNumber', event.target.value)} placeholder="Number printed on the certificate" autoFocus />
+                      </Field>
+                      <Field label="SDMS code" htmlFor="sdmsCode" hint="The school code from the School Data Management System.">
+                        <input id="sdmsCode" autoComplete="off" value={draft.sdmsCode} onChange={(event) => set('sdmsCode', event.target.value)} placeholder="SDMS-20126" />
                       </Field>
                       <Field label="School name" htmlFor="schoolName">
                         <input id="schoolName" autoComplete="organization" value={draft.schoolName} onChange={(event) => set('schoolName', event.target.value)} placeholder="Green Hills Academy" />
@@ -754,9 +758,6 @@ export function RegisterSchool({ embedded = false, onDismiss }: { embedded?: boo
                 {step === 3 && (
                   <>
                     <FormSection title="Person" note="The person authorized to act for the school.">
-                      <Field label="Representative ID" htmlFor="representativeId" locked hint="Assigned automatically when you submit.">
-                        <input id="representativeId" value="Assigned on submission" disabled />
-                      </Field>
                       <div className="field-row">
                         <Field label="Full name" htmlFor="representativeName">
                           <input id="representativeName" autoComplete="name" value={draft.representativeName} onChange={(event) => set('representativeName', event.target.value)} placeholder="Full name" autoFocus />
@@ -855,6 +856,7 @@ export function RegisterSchool({ embedded = false, onDismiss }: { embedded?: boo
                       <dl className="wizard-summary">
                         <div><dt>Name</dt><dd>{draft.schoolName || '—'}</dd></div>
                         <div><dt>Registration number</dt><dd>{draft.registrationNumber || '—'}</dd></div>
+                        <div><dt>SDMS code</dt><dd>{draft.sdmsCode || '—'}</dd></div>
                         <div><dt>Type</dt><dd>{labelOf(SCHOOL_TYPES, draft.schoolType) || '—'}</dd></div>
                         <div><dt>Ownership</dt><dd>{labelOf(OWNERSHIP_TYPES, draft.ownershipType) || '—'}</dd></div>
                         <div><dt>Status</dt><dd>{labelOf(OPERATING_STATUSES, draft.operatingStatus) || '—'}</dd></div>

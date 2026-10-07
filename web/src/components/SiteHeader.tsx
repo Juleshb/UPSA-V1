@@ -32,11 +32,12 @@ export function SiteHeader() {
 
   return (
     <header className="topbar">
-      <Link className="mini-brand" to="/" aria-label="UPSA Next Payment home">
+      <Link className="mini-brand brand-product" to="/" aria-label="UPSA Next Payment, the product">
         <img src="/rupsa-next-icon.svg" alt="" />
-        <span className="brand-lockup">
-          <span className="brand-line"><b>UPSA</b><em>Next</em></span>
-          <small>Payment</small>
+        <span className="brand-lockup product-lockup">
+          <b>UPSA</b>
+          <i className="brand-rule" />
+          <small>Next Payment</small>
         </span>
       </Link>
 
@@ -60,6 +61,15 @@ export function SiteHeader() {
           {user ? 'Workspace' : 'Sign in'}
         </NavLink>
       </nav>
+
+      <Link className="mini-brand brand-company" to="/" aria-label="RUPSA Next Payment PLC, the company">
+        <img src="/rupsa-plc-icon.svg" alt="" />
+        <span className="brand-lockup company-lockup">
+          <b>RUPSA</b>
+          <i className="brand-rule" />
+          <small>Next Payment <span className="brand-plc">PLC</span></small>
+        </span>
+      </Link>
 
       <button
         className={`menu-toggle${menuOpen ? ' open' : ''}`}

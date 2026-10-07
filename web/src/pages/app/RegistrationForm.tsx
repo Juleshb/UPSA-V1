@@ -147,6 +147,10 @@ export function RegistrationForm() {
     setStep(target)
   }
 
+  function generatedId(field: CatalogField) {
+    return field.input === 'automatic' && /id$/i.test(field.key)
+  }
+
   function displayValue(field: CatalogField) {
     const raw = values[field.key]
     if (field.input === 'automatic') return 'Assigned on save'
@@ -160,6 +164,7 @@ export function RegistrationForm() {
   }
 
   function renderField(field: CatalogField) {
+    if (generatedId(field)) return null
     if (field.input === 'automatic') {
       return (
         <Field key={field.key} label={field.label} note="automatic" hint={field.hint ?? 'Recorded with this registration.'}>
@@ -279,7 +284,7 @@ export function RegistrationForm() {
         )}
         {current === 'Review' && (
           <FieldGroup title="Confirm the registration">
-            {fields.map((field) => (
+            {fields.filter((field) => !generatedId(field)).map((field) => (
               <Field key={field.key} label={field.label}>
                 <input value={displayValue(field)} readOnly />
               </Field>

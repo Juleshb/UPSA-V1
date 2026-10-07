@@ -117,7 +117,7 @@ export function StudentsBoard() {
             <Field label="Student name" span="full">
               <input name="studentName" required defaultValue={selected.studentName} />
             </Field>
-            <Field label="External ID">
+            <Field label="SDMS code">
               <input name="studentExternalId" required defaultValue={selected.studentExternalId} />
             </Field>
             <Field label="Class">

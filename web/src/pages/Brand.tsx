@@ -1,41 +1,86 @@
 import { usePageTitle } from '../components/usePageTitle'
 
 export function Brand() {
-  usePageTitle('Brand identity — UPSA Next Payment')
+  usePageTitle('Brand identity — UPSA & RUPSA')
 
   return (
     <main>
-      <section className="hero" id="top">
-        <div className="eyebrow"><span /> Brand identity</div>
-        <div className="hero-logo">
-          <img src="/rupsa-next-logo.svg" alt="UPSA Next Payment" />
+      <section className="hero brand-hero" id="top">
+        <div className="eyebrow"><span /> Dual brand system</div>
+        <div className="hero-duo">
+          <figure className="hero-duo-item product">
+            <img src="/rupsa-next-icon.svg" alt="" />
+            <figcaption>
+              <b>UPSA</b>
+              <small>Next Payment</small>
+              <em>Product</em>
+            </figcaption>
+          </figure>
+          <span className="hero-duo-and" aria-hidden="true">×</span>
+          <figure className="hero-duo-item company">
+            <img src="/rupsa-plc-icon.svg" alt="" />
+            <figcaption>
+              <b>RUPSA</b>
+              <small>Next Payment PLC</small>
+              <em>Company</em>
+            </figcaption>
+          </figure>
         </div>
-        <h1>Move education forward.</h1>
+        <h1>Two names.<br />One promise.</h1>
         <p className="hero-copy">
-          A confident identity for the digital bridge between schools,
-          families and financial partners.
+          UPSA is the product families and schools use every day.
+          RUPSA Next Payment PLC is the company that stands behind
+          the Collateral Guarantee Support Facility.
         </p>
         <div className="actions">
-          <a className="button primary" href="/rupsa-next-logo.png" download="rupsa-next-logo.png">
-            Download primary logo
-            <em>PNG</em>
+          <a className="button primary" href="#upsa">
+            UPSA product identity
             <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10m0 0 4-4m-4 4L6 9M4 16h12" /></svg>
           </a>
-          <a className="button secondary" href="/rupsa-next-icon.png" download="rupsa-next-icon.png">
-            Download icon
-            <em>PNG</em>
+          <a className="button secondary" href="#rupsa">
+            RUPSA company identity
           </a>
         </div>
-        <p className="asset-formats">
-          Vector files
-          <a href="/rupsa-next-logo.svg" download="rupsa-next-logo.svg">Primary SVG</a>
-          <a href="/rupsa-next-icon.svg" download="rupsa-next-icon.svg">Icon SVG</a>
-        </p>
         <div className="scroll-note"><span /> Explore the system</div>
       </section>
 
-      <section className="story section">
-        <div className="section-label">01 / The mark</div>
+      <section className="relation section">
+        <div className="section-label">01 / How they relate</div>
+        <div className="relation-grid">
+          <div>
+            <h2>Same shield.<br />Different role.</h2>
+          </div>
+          <div className="relation-copy">
+            <p>
+              Both marks share the shield silhouette so the family stays
+              recognisable. Inside, the symbols diverge: UPSA protects and
+              verifies school payments; RUPSA underwrites the guarantee that
+              makes those payments bankable.
+            </p>
+            <div className="relation-cards">
+              <article>
+                <img src="/rupsa-next-icon.svg" alt="" />
+                <div>
+                  <b>UPSA Next Payment</b>
+                  <span>Product · lock + check</span>
+                  <p>Digital bridge for school fees, financing and member services.</p>
+                </div>
+              </article>
+              <article>
+                <img src="/rupsa-plc-icon.svg" alt="" />
+                <div>
+                  <b>RUPSA Next Payment PLC</b>
+                  <span>Company · columns + seal</span>
+                  <p>Corporate entity and Collateral Guarantee Support Facility.</p>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="story section" id="upsa">
+        <div className="section-label">02 / UPSA — the product</div>
         <div className="story-grid">
           <div>
             <h2>Protected.<br />Then verified.</h2>
@@ -59,31 +104,38 @@ export function Brand() {
       </section>
 
       <section className="applications section">
-        <div className="section-label light">02 / Logo suite</div>
+        <div className="section-label light">03 / UPSA logo suite</div>
         <div className="logo-grid">
           <article className="logo-card light-card">
             <span>Primary</span>
             <img src="/rupsa-next-logo.svg" alt="UPSA Next Payment primary logo" />
-            <a className="logo-download" href="/rupsa-next-logo.png" download="rupsa-next-logo.png">Download PNG</a>
+            <a className="logo-download" href="/rupsa-next-logo.svg" download="upsa-next-logo.svg">Download SVG</a>
           </article>
           <article className="logo-card dark-card">
             <span>Reversed</span>
             <img src="/rupsa-next-logo-reversed.svg" alt="UPSA Next Payment reversed logo" />
-            <a className="logo-download" href="/rupsa-next-logo-reversed.png" download="rupsa-next-logo-reversed.png">Download PNG</a>
+            <a className="logo-download" href="/rupsa-next-logo-reversed.svg" download="upsa-next-logo-reversed.svg">Download SVG</a>
           </article>
           <article className="logo-card icon-card">
             <span>App icon</span>
             <img src="/rupsa-next-icon.svg" alt="UPSA Next Payment app icon" />
-            <a className="logo-download" href="/rupsa-next-icon.png" download="rupsa-next-icon.png">Download PNG</a>
+            <a className="logo-download" href="/rupsa-next-icon.svg" download="upsa-next-icon.svg">Download SVG</a>
           </article>
         </div>
+        <p className="asset-formats suite-formats">
+          Also available
+          <a href="/rupsa-next-logo.png" download="upsa-next-logo.png">Primary PNG</a>
+          <a href="/rupsa-next-icon.png" download="upsa-next-icon.png">Icon PNG</a>
+          <a href="/rupsa-next-logo-mono.png" download="upsa-next-logo-mono.png">Monochrome PNG</a>
+          <a href="/upsa-next-logo-lockup.svg" download="upsa-next-logo-lockup.svg">Vector lockup</a>
+        </p>
       </section>
 
       <section className="palette section">
-        <div className="section-label">03 / Colour</div>
+        <div className="section-label">04 / UPSA colour</div>
         <div className="palette-heading">
-          <h2>Built for clarity<br />and confidence.</h2>
-          <p>Deep navy establishes trust. Electric aqua signals access, movement and a digital-first future.</p>
+          <h2>Clarity and<br />forward motion.</h2>
+          <p>Deep navy establishes trust. Electric aqua signals access, movement and a digital-first product.</p>
         </div>
         <div className="swatches">
           <div className="swatch midnight"><b>UPSA Midnight</b><span>#092B3C</span></div>
@@ -93,11 +145,70 @@ export function Brand() {
         </div>
       </section>
 
+      <section className="story section company-story" id="rupsa">
+        <div className="section-label">05 / RUPSA — the company</div>
+        <div className="story-grid">
+          <div>
+            <h2>Collateral.<br />Then guaranteed.</h2>
+          </div>
+          <div className="story-copy">
+            <p>
+              The same <strong>shield</strong> frames the Collateral Guarantee
+              Support Facility. Twin columns carry the structure; the seal
+              confirms a guarantee has been issued.
+            </p>
+            <div className="traits company-traits">
+              <span>Collateral</span><span>Guarantee</span><span>Facility</span>
+            </div>
+          </div>
+          <div className="mark-stage company-mark">
+            <img src="/rupsa-plc-icon.svg" alt="RUPSA Next Payment PLC symbol" />
+            <span className="orbit orbit-one" />
+            <span className="orbit orbit-two" />
+          </div>
+        </div>
+      </section>
+
+      <section className="applications section company-apps">
+        <div className="section-label light">06 / RUPSA logo suite</div>
+        <div className="logo-grid">
+          <article className="logo-card light-card">
+            <span>Primary</span>
+            <img src="/rupsa-plc-logo.svg" alt="RUPSA Next Payment PLC primary logo" />
+            <a className="logo-download" href="/rupsa-plc-logo.svg" download="rupsa-plc-logo.svg">Download SVG</a>
+          </article>
+          <article className="logo-card dark-card">
+            <span>Reversed</span>
+            <img src="/rupsa-plc-logo-reversed.svg" alt="RUPSA Next Payment PLC reversed logo" />
+            <a className="logo-download" href="/rupsa-plc-logo-reversed.svg" download="rupsa-plc-logo-reversed.svg">Download SVG</a>
+          </article>
+          <article className="logo-card icon-card company-icon-card">
+            <span>Facility mark</span>
+            <img src="/rupsa-plc-icon.svg" alt="RUPSA Next Payment PLC mark" />
+            <a className="logo-download" href="/rupsa-plc-icon.svg" download="rupsa-plc-icon.svg">Download SVG</a>
+          </article>
+        </div>
+      </section>
+
+      <section className="palette section company-palette">
+        <div className="section-label">07 / RUPSA colour</div>
+        <div className="palette-heading">
+          <h2>Institutional<br />and assured.</h2>
+          <p>Shared navy keeps the family together. Guarantee gold marks the company and the facility that underwrites trust.</p>
+        </div>
+        <div className="swatches">
+          <div className="swatch midnight"><b>RUPSA Midnight</b><span>#092B3C</span></div>
+          <div className="swatch gold"><b>Guarantee Gold</b><span>#D4A84B</span></div>
+          <div className="swatch reserve"><b>Reserve Bronze</b><span>#C4963A</span></div>
+          <div className="swatch white"><b>Clear White</b><span>#F7FAF9</span></div>
+        </div>
+      </section>
+
       <section className="practice section">
-        <div className="section-label light">04 / In practice</div>
+        <div className="section-label light">08 / UPSA in practice</div>
         <div className="practice-heading">
-          <h2>A brand made<br />to be useful.</h2>
-          <p>From a parent’s first tap to a member’s community event, the identity stays clear, warm and recognisable.</p>
+          <h2>A product brand<br />made to be useful.</h2>
+          <p>From a parent’s first tap to a member’s community event, the UPSA identity stays clear, warm and recognisable.</p>
         </div>
 
         <div className="practice-grid">
@@ -265,10 +376,16 @@ export function Brand() {
         </div>
       </section>
 
-      <section className="closing">
-        <img src="/rupsa-next-logo-reversed.svg" alt="UPSA Next Payment" />
-        <p>Payments. Access. Progress.</p>
-        <a href="/rupsa-next-logo-mono.png" download="rupsa-next-logo-mono.png">Download monochrome logo <span>PNG</span></a>
+      <section className="closing dual-closing">
+        <div className="closing-marks">
+          <img src="/rupsa-next-logo-reversed.svg" alt="UPSA Next Payment" />
+          <img src="/rupsa-plc-logo-reversed.svg" alt="RUPSA Next Payment PLC" />
+        </div>
+        <p>Product · Company · Guarantee</p>
+        <div className="closing-links">
+          <a href="/rupsa-next-logo.svg" download="upsa-next-logo.svg">UPSA primary <span>SVG</span></a>
+          <a href="/rupsa-plc-logo.svg" download="rupsa-plc-logo.svg">RUPSA primary <span>SVG</span></a>
+        </div>
       </section>
     </main>
   )

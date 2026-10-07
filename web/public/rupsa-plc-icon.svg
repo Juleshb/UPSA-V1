@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title desc">
+  <title id="title">RUPSA Next Payment PLC mark</title>
+  <desc id="desc">Shield mark for the Collateral Guarantee Support Facility: the same shield shape as UPSA, with supporting columns and a guarantee seal inside.</desc>
+
+  <!-- Outer shield: same silhouette family as the UPSA product icon -->
+  <path
+    fill="#092b3c"
+    d="M60 6
+      C79 13 96 18 104 20.5
+      V52
+      C104 78 87 97 60 114
+      C33 97 16 78 16 52
+      V20.5
+      C24 18 41 13 60 6Z"/>
+
+  <!-- Gold right face -->
+  <path
+    fill="#d4a84b"
+    d="M60 6
+      C79 13 96 18 104 20.5
+      V52
+      C104 78 87 97 60 114
+      Z"/>
+
+  <!-- Inner navy face for contrast -->
+  <path
+    fill="#0a3344"
+    d="M60 14
+      C76 20 90 24 96 26
+      V52
+      C96 72 82 88 60 102
+      C38 88 24 72 24 52
+      V26
+      C30 24 44 20 60 14Z"/>
+
+  <!-- Inner gold face -->
+  <path
+    fill="#c4963a"
+    d="M60 14
+      C76 20 90 24 96 26
+      V52
+      C96 72 82 88 60 102
+      Z"/>
+
+  <!-- Collateral Guarantee Support Facility symbol -->
+  <g fill="#f7faf9">
+    <!-- Guarantee cover / lintel -->
+    <rect x="36" y="32" width="48" height="7" rx="2"/>
+    <!-- Twin support columns -->
+    <rect x="41" y="42" width="9" height="34" rx="1.5"/>
+    <rect x="70" y="42" width="9" height="34" rx="1.5"/>
+    <!-- Bases -->
+    <rect x="38" y="74" width="15" height="4" rx="1"/>
+    <rect x="67" y="74" width="15" height="4" rx="1"/>
+    <!-- Centre facility block -->
+    <rect x="54" y="48" width="12" height="22" rx="1.5"/>
+  </g>
+
+  <!-- Issued guarantee seal -->
+  <circle cx="80" cy="88" r="12" fill="#092b3c"/>
+  <path
+    fill="#f7faf9"
+    d="M74.8 88.2 78.2 91.6 85.6 83.4 87.4 85.1 78.2 95.1 73 89.9z"/>
+</svg>

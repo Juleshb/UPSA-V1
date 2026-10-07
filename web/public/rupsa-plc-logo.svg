@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 120" role="img" aria-labelledby="title desc">
+  <title id="title">RUPSA Next Payment PLC logo</title>
+  <desc id="desc">Company lockup for RUPSA Next Payment PLC, with the Collateral Guarantee Support Facility shield.</desc>
+
+  <!-- Mark -->
+  <g transform="translate(4 6)">
+    <path fill="#092b3c" d="M54 0C71.1 6.3 86.4 10.8 93.6 13.05V41.4C93.6 64.8 78.3 81.9 54 97.2C29.7 81.9 14.4 64.8 14.4 41.4V13.05C21.6 10.8 36.9 6.3 54 0Z"/>
+    <path fill="#d4a84b" d="M54 0C71.1 6.3 86.4 10.8 93.6 13.05V41.4C93.6 64.8 78.3 81.9 54 97.2Z"/>
+    <path fill="#0a3344" d="M54 7.2C68.4 12.6 81 16.2 86.4 18V41.4C86.4 59.4 73.8 73.8 54 86.4C34.2 73.8 21.6 59.4 21.6 41.4V18C27 16.2 39.6 12.6 54 7.2Z"/>
+    <path fill="#c4963a" d="M54 7.2C68.4 12.6 81 16.2 86.4 18V41.4C86.4 59.4 73.8 73.8 54 86.4Z"/>
+    <g fill="#f7faf9">
+      <rect x="32.4" y="23.4" width="43.2" height="6.3" rx="1.8"/>
+      <rect x="36.9" y="32.4" width="8.1" height="30.6" rx="1.35"/>
+      <rect x="63" y="32.4" width="8.1" height="30.6" rx="1.35"/>
+      <rect x="34.2" y="61.2" width="13.5" height="3.6" rx=".9"/>
+      <rect x="60.3" y="61.2" width="13.5" height="3.6" rx=".9"/>
+      <rect x="48.6" y="37.8" width="10.8" height="19.8" rx="1.35"/>
+    </g>
+    <circle cx="72" cy="73.8" r="10.8" fill="#092b3c"/>
+    <path fill="#f7faf9" d="M67.3 74 70.4 77.1 77 69.7 78.6 71.2 70.4 80.2 65.7 75.5z"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="128" y="48" fill="#092b3c" font-family="Inter, Avenir, Segoe UI, Arial, sans-serif" font-size="34" font-weight="800" letter-spacing="4">RUPSA</text>
+  <rect x="128" y="58" width="34" height="3" fill="#d4a84b"/>
+  <text x="128" y="86" fill="#092b3c" font-family="Inter, Avenir, Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="2.2">NEXT PAYMENT</text>
+  <rect x="268" y="70" width="42" height="20" rx="4" fill="none" stroke="#092b3c" stroke-width="1.6"/>
+  <text x="289" y="84" fill="#092b3c" font-family="Inter, Avenir, Segoe UI, Arial, sans-serif" font-size="11" font-weight="800" letter-spacing="1.4" text-anchor="middle">PLC</text>
+</svg>

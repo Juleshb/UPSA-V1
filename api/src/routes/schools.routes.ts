@@ -19,6 +19,7 @@ const createSchema = z.object({
   rupsaMemberId: z.string().optional(),
   schoolName: z.string().min(2),
   registrationNumber: z.string().min(2),
+  sdmsCode: z.string().trim().min(2).optional(),
   taxIdentificationNumber: z.string().optional(),
   phone: z.string().min(8),
   email: z.string().email(),
@@ -34,6 +35,7 @@ const updateSchema = z.object({
   sector: z.string().optional(),
   rupsaMemberId: z.string().optional(),
   taxIdentificationNumber: z.string().optional(),
+  sdmsCode: z.string().trim().min(2).optional(),
 });
 
 const personSchema = z.object({

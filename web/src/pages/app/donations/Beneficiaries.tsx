@@ -76,7 +76,6 @@ export function BeneficiaryForm() {
       <form id="beneficiary-form" key={steps.step} onSubmit={(event) => { event.preventDefault(); submit('register', steps.collect(event.currentTarget)) }}>
         {steps.step === 0 && (
           <FieldGroup title="Beneficiary information">
-            <Field label="Beneficiary ID" note="automatic"><input value="Assigned on save" disabled /></Field>
             <Field label="Beneficiary type" note="required">
               <select value={beneficiaryType} onChange={(event) => setBeneficiaryType(event.target.value)}>
                 {BENEFICIARY_TYPES.map((item) => <option key={item} value={item}>{item.replaceAll('_', ' ')}</option>)}

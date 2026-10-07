@@ -190,7 +190,7 @@ export async function createStudent(input: {
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      throw errors.conflict('STUDENT_EXISTS', 'This school already has a student with that admission number.');
+      throw errors.conflict('STUDENT_EXISTS', 'This school already has a student with that SDMS code.');
     }
     throw error;
   }

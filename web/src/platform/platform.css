@@ -529,7 +529,7 @@
   overflow: auto;
   padding: 28px 28px 56px;
 }
-.app-page { display: grid; gap: 22px; }
+.app-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; }
 .app-heading {
   display: flex;
   justify-content: space-between;
@@ -578,7 +578,7 @@
 
 .app-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
   gap: 12px;
 }
 .app-subnav {
@@ -768,7 +768,7 @@
 .app-panel header a { color: #0d6b5c; font-size: 13px; }
 [data-theme="reversed"] .app-panel header a { color: #18d6b4; }
 
-.app-table-wrap { overflow: auto; }
+.app-table-wrap { max-width: 100%; min-width: 0; overflow: auto; }
 .app-table { width: 100%; border-collapse: collapse; }
 .app-table th,
 .app-table td {
@@ -1178,9 +1178,47 @@
     transition: transform .2s;
   }
   .app-sidebar.open { transform: none; }
-  .app-menu { display: inline-flex; }
+  .app-menu { display: inline-flex; flex: none; }
+  .app-topbar { height: auto; min-height: 64px; padding: 10px 12px; gap: 10px; }
+  .app-top-context { flex: 1; }
+  .app-top-context b,
+  .app-crumb {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .app-topbar .app-theme { display: none; }
-  .app-heading { flex-direction: column; align-items: start; }
+  .app-content { padding: 18px 16px 48px; }
+  .app-page > *,
+  .app-heading,
+  .app-heading > div,
+  .app-stats,
+  .app-grid,
+  .app-panel,
+  .app-kind-grid { min-width: 0; max-width: 100%; }
+  .app-heading { flex-direction: column; align-items: stretch; }
+  .app-heading h1 { font-size: clamp(26px, 7vw, 34px); overflow-wrap: anywhere; }
+  .app-heading p { max-width: none; }
+  .app-heading-actions { width: 100%; }
+  .app-heading-actions .button { flex: 1 1 140px; justify-content: center; }
+  .app-shell .button { width: auto; }
+  .app-subnav {
+    flex-wrap: nowrap;
+    margin: 0 -16px 18px;
+    padding: 0 16px 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .app-subnav::-webkit-scrollbar { display: none; }
+  .app-subnav a { flex: none; white-space: nowrap; }
+  .app-panel header { flex-wrap: wrap; align-items: flex-start; gap: 8px; }
+  .app-stat b { overflow-wrap: anywhere; font-size: clamp(20px, 5vw, 24px); }
+  .app-chart { height: 220px; }
+  .app-chart.tall { height: 260px; }
+  .app-chart.wave { height: 280px; }
+  .app-table { width: max-content; min-width: 100%; }
+  .app-table th,
+  .app-table td { white-space: nowrap; }
   .app-form,
   .app-modal .app-form { grid-template-columns: 1fr; }
   .student-steps,

@@ -16,6 +16,7 @@ const applySchema = z.object({
   rupsaMemberId: optionalText,
   schoolName: z.string().trim().min(2),
   registrationNumber: z.string().trim().min(2),
+  sdmsCode: z.string().trim().min(2),
   schoolType: z.enum(['NURSERY', 'PRIMARY', 'SECONDARY', 'TVET', 'SPECIAL_EDUCATION', 'COMBINED', 'OTHER']),
   ownershipType: z.enum(['PRIVATE', 'PUBLIC', 'GOVERNMENT_AIDED', 'FAITH_BASED', 'COMMUNITY', 'OTHER']),
   dateEstablished: day,

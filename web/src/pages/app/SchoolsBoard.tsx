@@ -13,7 +13,7 @@ export function SchoolsBoard() {
   const [query, setQuery] = useState('')
   const items = schools.data?.items ?? []
   const visible = items.filter((item) =>
-    matchesQuery(query, item.schoolName, item.rupsaMemberId, item.registrationNumber, item.email, item.address.district, item.address.province, item.status, item.kybStatus, item.membershipStatus),
+    matchesQuery(query, item.schoolName, item.rupsaMemberId, item.registrationNumber, item.sdmsCode, item.email, item.address.district, item.address.province, item.status, item.kybStatus, item.membershipStatus),
   )
 
   return (

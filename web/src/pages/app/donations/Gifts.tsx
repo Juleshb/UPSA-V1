@@ -198,7 +198,6 @@ export function GiftForm() {
       <form id="gift-form" key={steps.step} onSubmit={(event) => { event.preventDefault(); submit('submit', steps.collect(event.currentTarget)) }}>
         {steps.step === 0 && (
           <FieldGroup title="Donation information">
-            <Field label="Donation ID" note="automatic"><input value="Assigned on save" disabled /></Field>
             <Field label="Donor" note="required">
               <select name="donorId" required defaultValue={saved.donorId ?? ''}>
                 <option value="">Verified donor</option>

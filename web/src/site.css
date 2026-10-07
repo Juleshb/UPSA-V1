@@ -221,9 +221,15 @@
   padding-bottom: 48px;
   border-bottom: 1px solid rgba(199,247,237,.12);
 }
-.footer-brand img { width: auto; height: 58px; }
+.footer-marks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 22px 28px;
+}
+.footer-brand img { width: auto; height: 48px; }
 .footer-brand p {
-  max-width: 320px;
+  max-width: 360px;
   margin: 22px 0 0;
   color: #9bb2bc;
   font-size: 14px;

@@ -55,6 +55,7 @@ async function ensureSchool(input: {
   rupsaMemberId: string;
   schoolName: string;
   registrationNumber: string;
+  sdmsCode: string;
   email: string;
   phone: string;
   province: string;
@@ -63,7 +64,12 @@ async function ensureSchool(input: {
 }) {
   return prisma.school.upsert({
     where: { registrationNumber: input.registrationNumber },
-    update: { schoolName: input.schoolName, status: SchoolStatus.ACTIVE, kybStatus: KybStatus.VERIFIED },
+    update: {
+      schoolName: input.schoolName,
+      sdmsCode: input.sdmsCode,
+      status: SchoolStatus.ACTIVE,
+      kybStatus: KybStatus.VERIFIED,
+    },
     create: {
       ...input,
       taxIdentificationNumber: `TIN-${input.registrationNumber}`,
@@ -468,6 +474,7 @@ async function main() {
       rupsaMemberId: 'RUPSA-MEM-000123',
       schoolName: 'Example Private School',
       registrationNumber: 'SCH-12345',
+      sdmsCode: 'SDMS-10001',
       email: 'school@example.rw',
       phone: '+250788000100',
       province: 'Kigali',
@@ -479,6 +486,7 @@ async function main() {
       rupsaMemberId: 'RUPSA-MEM-000201',
       schoolName: 'Green Hills Academy',
       registrationNumber: 'SCH-20126',
+      sdmsCode: 'SDMS-20126',
       email: 'finance@greenhills.rw',
       phone: '+250788000201',
       province: 'City Of Kigali',
@@ -490,6 +498,7 @@ async function main() {
       rupsaMemberId: 'RUPSA-MEM-000202',
       schoolName: 'Lycée de Nyanza',
       registrationNumber: 'SCH-20226',
+      sdmsCode: 'SDMS-20226',
       email: 'accounts@lyceenyanza.rw',
       phone: '+250788000202',
       province: 'Southern',
@@ -501,6 +510,7 @@ async function main() {
       rupsaMemberId: 'RUPSA-MEM-000203',
       schoolName: 'Rubavu Lakeside College',
       registrationNumber: 'SCH-20326',
+      sdmsCode: 'SDMS-20326',
       email: 'bursar@lakeside.rw',
       phone: '+250788000203',
       province: 'Western',

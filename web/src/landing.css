@@ -759,7 +759,7 @@
   width: min(1120px, calc(100% - 32px));
   height: 64px;
   margin: 0 auto;
-  padding: 0 10px 0 18px;
+  padding: 0 14px 0 16px;
   pointer-events: auto;
   border: 1px solid rgba(255, 255, 255, .14);
   border-radius: 999px;
@@ -768,13 +768,18 @@
 }
 .site-public .mini-brand,
 .site-public .brand-line b,
-.site-public .brand-lockup small,
 .site-public .site-nav a,
 .site-public .nav-trigger {
   color: white;
 }
-.site-public .brand-line em,
-.site-public .brand-lockup small { color: #b8fff0; }
+.site-public .brand-line em { color: #b8fff0; }
+.site-public .product-lockup > b,
+.site-public .company-lockup > b,
+.site-public .product-lockup small,
+.site-public .company-lockup small,
+.site-public .brand-plc { color: white; }
+.site-public .brand-rule { background: #18d6b4; }
+.site-public .company-lockup .brand-rule { background: #d4a84b; }
 .site-public .site-nav { gap: 18px; }
 .site-public .site-nav a,
 .site-public .nav-trigger {
@@ -1342,7 +1347,8 @@
   .portal-window-grid img { grid-column: 1 / -1; height: 180px; }
 }
 @media (max-width: 850px) {
-  .site-public .topbar { width: calc(100% - 20px); }
+  .site-public .topbar { width: calc(100% - 20px); display: flex; }
+  .site-public .brand-company { margin-left: auto; }
   .site-public .site-nav.open {
     position: fixed;
     top: 84px;
