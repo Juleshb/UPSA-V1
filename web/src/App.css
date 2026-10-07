@@ -295,8 +295,11 @@ h2 { margin: 0; font-size: clamp(40px,5vw,70px); line-height: 1.02; letter-spaci
 .designer-credit a:hover { color: white; }
 .designer-credit a span { margin-left: 3px; }
 @media (max-width: 850px) {
-  .topbar { height: 66px; display: flex; }
+  .topbar { height: 66px; display: flex; align-items: center; gap: 10px; }
   .brand-company { margin-left: auto; }
+  .mini-brand .brand-lockup { display: none; }
+  .mini-brand { gap: 0; }
+  .mini-brand img { width: 40px; height: 40px; }
   .edition { display: none; }
   .site-nav { display: none; position: absolute; top: 66px; right: 0; left: 0; z-index: 20; margin: 0; padding: 18px 6vw 24px; flex-direction: column; align-items: stretch; gap: 0; background: #f7faf9; border-bottom: 1px solid rgba(9,43,60,.12); }
   .site-nav.open { display: flex; }
